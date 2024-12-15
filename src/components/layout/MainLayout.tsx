@@ -1,11 +1,10 @@
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Button } from '../ui/button';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { NotificacoesPopover } from '../notificacoes/NotificacoesPopover';
-import { ChatDrawer } from '../chat/ChatDrawer';
 import { SearchCommand } from './SearchCommand';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Calendar, Users, ClipboardList, BarChart2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface MainLayoutProps {
@@ -21,7 +20,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', path: '/' },
   { label: 'Pessoas', path: '/pessoas' },
   { label: 'Eventos', path: '/eventos' },
-  { label: 'Cardápios', path: '/cardapios' },
   { label: 'Escalas', path: '/escalas' },
   { label: 'Relatórios', path: '/relatorios' },
 ];
@@ -41,20 +39,25 @@ export function MainLayout({ children }: MainLayoutProps) {
     setMobileMenuOpen(false);
   };
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 768) {
-        setMobileMenuOpen(false);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const getMenuIcon = (label: string) => {
+    switch (label) {
+      case 'Dashboard':
+        return <BarChart2 className="h-4 w-4" />;
+      case 'Pessoas':
+        return <Users className="h-4 w-4" />;
+      case 'Eventos':
+        return <Calendar className="h-4 w-4" />;
+      case 'Escalas':
+        return <ClipboardList className="h-4 w-4" />;
+      case 'Relatórios':
+        return <BarChart2 className="h-4 w-4" />;
+      default:
+        return null;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center">
           <div className="mr-4 hidden md:flex">
@@ -72,7 +75,10 @@ export function MainLayout({ children }: MainLayoutProps) {
                   )}
                   onClick={() => handleNavigation(item.path)}
                 >
-                  {item.label}
+                  <span className="flex items-center space-x-2">
+                    {getMenuIcon(item.label)}
+                    <span>{item.label}</span>
+                  </span>
                 </Button>
               ))}
             </nav>
@@ -130,7 +136,10 @@ export function MainLayout({ children }: MainLayoutProps) {
                   )}
                   onClick={() => handleNavigation(item.path)}
                 >
-                  {item.label}
+                  <span className="flex items-center space-x-2">
+                    {getMenuIcon(item.label)}
+                    <span>{item.label}</span>
+                  </span>
                 </Button>
               ))}
             </div>
@@ -148,7 +157,6 @@ export function MainLayout({ children }: MainLayoutProps) {
         </div>
       </header>
 
-      {/* Main content */}
       <main className="container py-6">
         {children}
       </main>

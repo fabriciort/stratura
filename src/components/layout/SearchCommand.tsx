@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { Command } from 'cmdk';
-import { Search, Calendar, Users, Utensils, ClipboardList } from 'lucide-react';
+import { Search, Calendar, Users, ClipboardList } from 'lucide-react';
 
 export function SearchCommand() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { pessoas, eventos, cardapios, escalas } = useApp();
+  const { pessoas, eventos, escalas } = useApp();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -93,25 +93,6 @@ export function SearchCommand() {
               </Command.Group>
             )}
 
-            {cardapios.length > 0 && (
-              <Command.Group heading="Cardápios">
-                {cardapios.map((cardapio) => (
-                  <Command.Item
-                    key={cardapio.id}
-                    value={`/cardapios/${cardapio.id}`}
-                    onSelect={handleSelect}
-                    className="flex items-center px-2 py-1 rounded-md hover:bg-accent cursor-pointer"
-                  >
-                    <Utensils className="mr-2 h-4 w-4" />
-                    <span>{cardapio.nome}</span>
-                    <span className="ml-2 text-sm text-muted-foreground">
-                      {cardapio.itens.length} itens
-                    </span>
-                  </Command.Item>
-                ))}
-              </Command.Group>
-            )}
-
             {escalas.length > 0 && (
               <Command.Group heading="Escalas">
                 {escalas.map((escala) => {
@@ -150,14 +131,6 @@ export function SearchCommand() {
               >
                 <Calendar className="mr-2 h-4 w-4" />
                 Novo Evento
-              </Command.Item>
-              <Command.Item
-                value="/cardapios/novo"
-                onSelect={handleSelect}
-                className="flex items-center px-2 py-1 rounded-md hover:bg-accent cursor-pointer"
-              >
-                <Utensils className="mr-2 h-4 w-4" />
-                Novo Cardápio
               </Command.Item>
             </Command.Group>
           </Command.List>

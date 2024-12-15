@@ -4,8 +4,10 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { Evento } from '../../types';
-import { Calendar, Clock, MapPin, Users, Utensils } from 'lucide-react';
+import { Evento, ItemCardapio } from '../../types';
+import { Calendar, Clock, MapPin, Users, Beer, Camera } from 'lucide-react';
+import { Checkbox } from '../ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 interface EventoFormProps {
   evento?: Evento;
@@ -13,7 +15,7 @@ interface EventoFormProps {
 }
 
 export function EventoForm({ evento, onClose }: EventoFormProps) {
-  const { addEvento, updateEvento, cardapios } = useApp();
+  const { addEvento, updateEvento } = useApp();
   const [formData, setFormData] = useState({
     nome: '',
     data: '',
@@ -21,8 +23,18 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
     horarioFim: '',
     local: '',
     tipo: '',
-    cardapioId: '',
     quantidadePessoas: 0,
+    caracteristicas: {
+      cardapio: {
+        nome: '',
+        itens: [] as ItemCardapio[]
+      },
+      temBebidas: false,
+      tipoBebidas: [] as ('cerveja' | 'chopp' | 'drinks' | 'refrigerante' | 'agua')[],
+      temCabineFoto: false,
+      tipoCabineFoto: undefined as 'propria' | 'externa' | undefined,
+      outrasCaracteristicas: [] as string[]
+    },
     observacoes: ''
   });
 
@@ -31,6 +43,12 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
       setFormData({
         ...evento,
         data: new Date(evento.data).toISOString().split('T')[0],
+        caracteristicas: {
+          ...evento.caracteristicas,
+          cardapio: evento.caracteristicas.cardapio || { nome: '', itens: [] },
+          tipoBebidas: evento.caracteristicas.tipoBebidas || [],
+          outrasCaracteristicas: evento.caracteristicas.outrasCaracteristicas || []
+        },
         observacoes: evento.observacoes || ''
       });
     }
@@ -54,10 +72,46 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
     onClose();
   };
 
-  const handleChange = (field: keyof typeof formData, value: string | number) => {
+  const handleChange = (field: string, value: any) => {
+    const fields = field.split('.');
+    if (fields.length === 1) {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        caracteristicas: {
+          ...prev.caracteristicas,
+          [fields[1]]: value
+        }
+      }));
+    }
+  };
+
+  const handleCardapioChange = (field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      caracteristicas: {
+        ...prev.caracteristicas,
+        cardapio: {
+          ...prev.caracteristicas.cardapio,
+          [field]: value
+        }
+      }
+    }));
+  };
+
+  const handleTipoBebidaChange = (tipo: 'cerveja' | 'chopp' | 'drinks' | 'refrigerante' | 'agua') => {
+    setFormData(prev => ({
+      ...prev,
+      caracteristicas: {
+        ...prev.caracteristicas,
+        tipoBebidas: prev.caracteristicas.tipoBebidas.includes(tipo)
+          ? prev.caracteristicas.tipoBebidas.filter(t => t !== tipo)
+          : [...prev.caracteristicas.tipoBebidas, tipo]
+      }
     }));
   };
 
@@ -168,24 +222,83 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="cardapioId">Cardápio</Label>
-            <div className="relative">
-              <Utensils className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <select
-                id="cardapioId"
-                className="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                value={formData.cardapioId}
-                onChange={(e) => handleChange('cardapioId', e.target.value)}
-                required
-              >
-                <option value="">Selecione um cardápio</option>
-                {cardapios.map((cardapio) => (
-                  <option key={cardapio.id} value={cardapio.id}>
-                    {cardapio.nome}
-                  </option>
-                ))}
-              </select>
+          <div className="space-y-4 border-t pt-4">
+            <h3 className="font-medium">Características do Evento</h3>
+            
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Cardápio</Label>
+                <Input
+                  placeholder="Nome do Cardápio"
+                  value={formData.caracteristicas.cardapio.nome}
+                  onChange={(e) => handleCardapioChange('nome', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="temBebidas"
+                    checked={formData.caracteristicas.temBebidas}
+                    onCheckedChange={(checked) => handleChange('caracteristicas.temBebidas', checked)}
+                  />
+                  <Label htmlFor="temBebidas" className="flex items-center space-x-2">
+                    <Beer className="h-4 w-4" />
+                    <span>Serviço de Bebidas</span>
+                  </Label>
+                </div>
+
+                {formData.caracteristicas.temBebidas && (
+                  <div className="ml-6 mt-2 space-y-2">
+                    <Label>Tipos de Bebidas</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['cerveja', 'chopp', 'drinks', 'refrigerante', 'agua'].map((tipo) => (
+                        <div key={tipo} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`bebida-${tipo}`}
+                            checked={formData.caracteristicas.tipoBebidas.includes(tipo as any)}
+                            onCheckedChange={() => handleTipoBebidaChange(tipo as any)}
+                          />
+                          <Label htmlFor={`bebida-${tipo}`}>{tipo.charAt(0).toUpperCase() + tipo.slice(1)}</Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="temCabineFoto"
+                    checked={formData.caracteristicas.temCabineFoto}
+                    onCheckedChange={(checked) => handleChange('caracteristicas.temCabineFoto', checked)}
+                  />
+                  <Label htmlFor="temCabineFoto" className="flex items-center space-x-2">
+                    <Camera className="h-4 w-4" />
+                    <span>Cabine de Foto</span>
+                  </Label>
+                </div>
+
+                {formData.caracteristicas.temCabineFoto && (
+                  <div className="ml-6 mt-2 space-y-2">
+                    <Label>Tipo de Cabine</Label>
+                    <RadioGroup
+                      value={formData.caracteristicas.tipoCabineFoto}
+                      onValueChange={(value) => handleChange('caracteristicas.tipoCabineFoto', value)}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="propria" id="cabine-propria" />
+                        <Label htmlFor="cabine-propria">Própria</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="externa" id="cabine-externa" />
+                        <Label htmlFor="cabine-externa">Externa</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 

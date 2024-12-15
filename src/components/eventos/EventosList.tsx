@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Evento } from '../../types';
-import { Calendar, Clock, MapPin, Users, Search, Filter, Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Search, Filter, Edit2, Trash2, AlertCircle, Beer, Camera } from 'lucide-react';
 import { LoadingList } from '../ui/loading-list';
 import { useToast } from '../../hooks/useToast';
 
@@ -164,6 +164,33 @@ export function EventosList({ onEdit }: EventosListProps) {
                     <div className="flex items-center text-sm">
                       <Users className="h-4 w-4 mr-2 text-muted-foreground" />
                       {evento.quantidadePessoas} pessoas esperadas
+                    </div>
+                    
+                    {/* Características do Evento */}
+                    <div className="border-t pt-2 mt-2 space-y-2">
+                      {evento.caracteristicas.cardapio?.nome && (
+                        <div className="text-sm">
+                          <span className="font-medium">Cardápio:</span> {evento.caracteristicas.cardapio.nome}
+                        </div>
+                      )}
+                      
+                      {evento.caracteristicas.temBebidas && (
+                        <div className="flex items-center text-sm">
+                          <Beer className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>
+                            {evento.caracteristicas.tipoBebidas?.join(', ')}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {evento.caracteristicas.temCabineFoto && (
+                        <div className="flex items-center text-sm">
+                          <Camera className="h-4 w-4 mr-2 text-muted-foreground" />
+                          <span>
+                            Cabine de Foto {evento.caracteristicas.tipoCabineFoto === 'propria' ? 'Própria' : 'Externa'}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

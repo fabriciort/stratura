@@ -1,157 +1,107 @@
 import { useState } from 'react';
-import { useNotificacoes } from '../../contexts/NotificacoesContext';
-import { Button } from '../ui/button';
-import { Card } from '../ui/card';
-import { Bell, Check, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useNotificacoes } from '../../contexts/NotificacoesContext';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Button } from '../ui/button';
+import { Bell } from 'lucide-react';
+import { NotificacaoTipo } from '../../types';
 
 export function NotificacoesPopover() {
-  const {
-    notificacoes,
-    notificacoesNaoLidas,
-    marcarComoLida,
-    marcarTodasComoLidas,
-    limparNotificacoes
-  } = useNotificacoes();
-  const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const { notificacoes, markAsRead, markAllAsRead, deleteNotificacao, getNotificacaoLink } = useNotificacoes();
+  const [open, setOpen] = useState(false);
 
-  const handleNotificacaoClick = (id: string, link: string) => {
-    marcarComoLida(id);
-    navigate(link);
-    setIsOpen(false);
-  };
-
-  const getIconePorTipo = (tipo: string) => {
+  const getNotificacaoIcon = (tipo: NotificacaoTipo) => {
     switch (tipo) {
       case 'evento_novo':
       case 'evento_atualizado':
       case 'lembrete_evento':
-        return '🗓️';
+        return '📅';
       case 'escala_nova':
       case 'escala_atualizada':
       case 'escala_confirmacao':
-        return '👥';
-      case 'cardapio_novo':
-      case 'cardapio_atualizado':
-        return '🍽️';
+        return '📋';
       default:
-        return '📢';
+        return '🔔';
     }
   };
 
+  const handleNotificacaoClick = (id: string, tipo: NotificacaoTipo, dadosAdicionais?: Record<string, string>) => {
+    markAsRead(id);
+    setOpen(false);
+    navigate(getNotificacaoLink(tipo, dadosAdicionais));
+  };
+
+  const notificacoesNaoLidas = notificacoes.filter(n => !n.lida).length;
+
   return (
-    <div className="relative">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="relative"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <Bell className="h-5 w-5" />
-        {notificacoesNaoLidas > 0 && (
-          <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">
-            {notificacoesNaoLidas}
-          </span>
-        )}
-      </Button>
-
-      {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsOpen(false)}
-          />
-          <Card className="absolute right-0 top-12 z-50 w-96 p-4 shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold">Notificações</h3>
-              <div className="flex space-x-2">
-                {notificacoesNaoLidas > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => marcarTodasComoLidas()}
-                  >
-                    <Check className="h-4 w-4 mr-1" />
-                    Marcar todas como lidas
-                  </Button>
-                )}
-                {notificacoes.length > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => limparNotificacoes()}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Limpar
-                  </Button>
-                )}
-              </div>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          {notificacoesNaoLidas > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+              {notificacoesNaoLidas}
+            </span>
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="end">
+        <div className="flex items-center justify-between border-b p-3">
+          <h4 className="font-semibold">Notificações</h4>
+          {notificacoesNaoLidas > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs"
+              onClick={() => markAllAsRead()}
+            >
+              Marcar todas como lidas
+            </Button>
+          )}
+        </div>
+        <div className="max-h-[300px] overflow-y-auto">
+          {notificacoes.length === 0 ? (
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              Nenhuma notificação
             </div>
-
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {notificacoes.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8">
-                  Nenhuma notificação
+          ) : (
+            notificacoes.map((notificacao) => (
+              <div
+                key={notificacao.id}
+                className={`flex items-start gap-3 border-b p-3 transition-colors hover:bg-accent cursor-pointer ${
+                  !notificacao.lida ? 'bg-accent/50' : ''
+                }`}
+                onClick={() => handleNotificacaoClick(notificacao.id, notificacao.tipo, notificacao.dadosAdicionais)}
+              >
+                <span className="mt-0.5 text-lg">
+                  {getNotificacaoIcon(notificacao.tipo)}
+                </span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{notificacao.titulo}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {notificacao.mensagem}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {new Date(notificacao.data).toLocaleString('pt-BR')}
+                  </p>
                 </div>
-              ) : (
-                notificacoes.map(notificacao => (
-                  <div
-                    key={notificacao.id}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                      notificacao.lida
-                        ? 'bg-secondary/30 hover:bg-secondary/50'
-                        : 'bg-secondary hover:bg-secondary/80'
-                    }`}
-                    onClick={() => handleNotificacaoClick(notificacao.id, notificacao.link || '/')}
-                  >
-                    <div className="flex items-start space-x-2">
-                      <span className="text-xl">
-                        {getIconePorTipo(notificacao.tipo)}
-                      </span>
-                      <div className="flex-1 space-y-1">
-                        <p className="text-sm font-medium">{notificacao.titulo}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {notificacao.mensagem}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(notificacao.data), {
-                            addSuffix: true,
-                            locale: ptBR
-                          })}
-                        </p>
-                      </div>
-                      {!notificacao.lida && (
-                        <div className="h-2 w-2 rounded-full bg-blue-500" />
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {notificacoes.length > 5 && (
-              <div className="mt-2 flex justify-center">
                 <Button
                   variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    const container = document.querySelector('.overflow-y-auto');
-                    if (container) {
-                      container.scrollTop = container.scrollHeight;
-                    }
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteNotificacao(notificacao.id);
                   }}
                 >
-                  <ChevronDown className="h-4 w-4 mr-1" />
-                  Ver mais antigas
+                  ×
                 </Button>
               </div>
-            )}
-          </Card>
-        </>
-      )}
-    </div>
+            ))
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 } 

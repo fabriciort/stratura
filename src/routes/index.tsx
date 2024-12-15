@@ -1,12 +1,11 @@
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { MainLayout } from '../components/layout/MainLayout';
+import { DashboardPage } from '../pages/dashboard';
 import { PessoasPage } from '../pages/pessoas';
 import { EventosPage } from '../pages/eventos';
-import { CardapiosPage } from '../pages/cardapios';
 import { EscalasPage } from '../pages/escalas';
 import { RelatoriosPage } from '../pages/relatorios';
 import { LoginPage } from '../pages/login';
-import { DashboardPage } from '../pages/dashboard';
 import { useAuth } from '../contexts/AuthContext';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -55,16 +54,6 @@ const router = createBrowserRouter([
       <PrivateRoute>
         <MainLayout>
           <EventosPage />
-        </MainLayout>
-      </PrivateRoute>
-    ),
-  },
-  {
-    path: '/cardapios',
-    element: (
-      <PrivateRoute>
-        <MainLayout>
-          <CardapiosPage />
         </MainLayout>
       </PrivateRoute>
     ),

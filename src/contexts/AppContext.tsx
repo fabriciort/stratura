@@ -1,11 +1,10 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
-import { Pessoa, Evento, Cardapio, Escala } from '../types';
+import { Pessoa, Evento, Escala } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
 interface AppContextType {
   pessoas: Pessoa[];
   eventos: Evento[];
-  cardapios: Cardapio[];
   escalas: Escala[];
   addPessoa: (pessoa: Omit<Pessoa, 'id'>) => void;
   updatePessoa: (id: string, pessoa: Partial<Pessoa>) => void;
@@ -13,9 +12,6 @@ interface AppContextType {
   addEvento: (evento: Omit<Evento, 'id'>) => void;
   updateEvento: (id: string, evento: Partial<Evento>) => void;
   deleteEvento: (id: string) => void;
-  addCardapio: (cardapio: Omit<Cardapio, 'id' | 'createdAt' | 'updatedAt'>) => void;
-  updateCardapio: (id: string, cardapio: Partial<Cardapio>) => void;
-  deleteCardapio: (id: string) => void;
   addEscala: (escala: Omit<Escala, 'id'>) => void;
   updateEscala: (id: string, escala: Partial<Escala>) => void;
   deleteEscala: (id: string) => void;
@@ -23,19 +19,17 @@ interface AppContextType {
 
 export const AppContext = createContext<AppContextType>({} as AppContextType);
 
-function generateId(): string {
-  return Math.random().toString(36).substr(2, 9);
+interface AppProviderProps {
+  children: ReactNode;
 }
 
-export function AppProvider({ children }: { children: ReactNode }) {
+export function AppProvider({ children }: AppProviderProps) {
   const [pessoas, setPessoas] = useState<Pessoa[]>([]);
   const [eventos, setEventos] = useState<Evento[]>([]);
-  const [cardapios, setCardapios] = useState<Cardapio[]>([]);
   const [escalas, setEscalas] = useState<Escala[]>([]);
 
   const addPessoa = (pessoa: Omit<Pessoa, 'id'>) => {
-    const novaPessoa = { ...pessoa, id: generateId() };
-    setPessoas(prev => [...prev, novaPessoa]);
+    setPessoas(prev => [...prev, { ...pessoa, id: uuidv4() }]);
   };
 
   const updatePessoa = (id: string, pessoa: Partial<Pessoa>) => {
@@ -47,8 +41,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const addEvento = (evento: Omit<Evento, 'id'>) => {
-    const novoEvento = { ...evento, id: generateId() };
-    setEventos(prev => [...prev, novoEvento]);
+    setEventos(prev => [...prev, { ...evento, id: uuidv4() }]);
   };
 
   const updateEvento = (id: string, evento: Partial<Evento>) => {
@@ -57,39 +50,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const deleteEvento = (id: string) => {
     setEventos(prev => prev.filter(e => e.id !== id));
-  };
-
-  const addCardapio = (cardapio: Omit<Cardapio, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const now = new Date();
-    const novoCardapio: Cardapio = {
-      ...cardapio,
-      id: uuidv4(),
-      createdAt: now,
-      updatedAt: now
-    };
-    setCardapios(prev => [...prev, novoCardapio]);
-  };
-
-  const updateCardapio = (id: string, cardapio: Partial<Cardapio>) => {
-    setCardapios(prev => prev.map(item => {
-      if (item.id === id) {
-        return {
-          ...item,
-          ...cardapio,
-          updatedAt: new Date()
-        };
-      }
-      return item;
-    }));
-  };
-
-  const deleteCardapio = (id: string) => {
-    setCardapios(prev => prev.filter(item => item.id !== id));
+    // Remover escalas associadas ao evento
+    setEscalas(prev => prev.filter(e => e.eventoId !== id));
   };
 
   const addEscala = (escala: Omit<Escala, 'id'>) => {
-    const novaEscala = { ...escala, id: generateId() };
-    setEscalas(prev => [...prev, novaEscala]);
+    setEscalas(prev => [...prev, { ...escala, id: uuidv4() }]);
   };
 
   const updateEscala = (id: string, escala: Partial<Escala>) => {
@@ -105,7 +71,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
       value={{
         pessoas,
         eventos,
-        cardapios,
         escalas,
         addPessoa,
         updatePessoa,
@@ -113,9 +78,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         addEvento,
         updateEvento,
         deleteEvento,
-        addCardapio,
-        updateCardapio,
-        deleteCardapio,
         addEscala,
         updateEscala,
         deleteEscala,
@@ -126,10 +88,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useApp() {
+export const useApp = () => {
   const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useApp deve ser usado dentro de um AppProvider');
+  if (!context) {
+    throw new Error('useApp must be used within an AppProvider');
   }
   return context;
-} 
+}; 
