@@ -5,15 +5,33 @@ import { Calendar, AlertCircle, Clock, Plus, Users, ChevronRight } from 'lucide-
 import { useNavigate } from 'react-router-dom';
 import { DashboardStats } from '../../components/dashboard/DashboardStats';
 import { cn } from '../../lib/utils';
+import { StatusIndicator } from '../../components/ui/status-indicator';
 
 export function DashboardPage() {
   const { eventos, escalas } = useApp();
   const navigate = useNavigate();
 
-  const eventosAtivos = eventos.filter(e => new Date(e.data) >= new Date());
+  const eventosAtivos = eventos.filter(e => {
+    const dataEvento = new Date(e.data);
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0); // Reseta o horário para comparar apenas as datas
+    
+    return (
+      dataEvento >= hoje || // Eventos futuros
+      e.status === 'em_andamento' || // Eventos em andamento
+      (e.status === 'pendente' && dataEvento.toDateString() === hoje.toDateString()) // Eventos pendentes de hoje
+    );
+  });
+
   const escalasPendentes = escalas.filter(e => e.status === 'rascunho');
   const proximosEventos = eventosAtivos
-    .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
+    .sort((a, b) => {
+      // Prioriza eventos em andamento
+      if (a.status === 'em_andamento' && b.status !== 'em_andamento') return -1;
+      if (b.status === 'em_andamento' && a.status !== 'em_andamento') return 1;
+      // Depois ordena por data
+      return new Date(a.data).getTime() - new Date(b.data).getTime();
+    })
     .slice(0, 3);
 
   return (
@@ -77,7 +95,10 @@ export function DashboardPage() {
                         <Calendar className="h-6 w-6 text-primary" />
                       </div>
                       <div>
-                        <p className="font-medium">{evento.nome}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{evento.nome}</p>
+                          <StatusIndicator status={evento.status} className="scale-75" />
+                        </div>
                         <div className="flex items-center text-sm text-muted-foreground">
                           <Clock className="mr-1 h-4 w-4" />
                           {new Date(evento.data).toLocaleDateString('pt-BR')} - {evento.horarioInicio}

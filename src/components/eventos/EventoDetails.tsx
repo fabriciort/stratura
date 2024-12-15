@@ -2,9 +2,11 @@ import { useApp } from '../../contexts/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import { Evento } from '../../types';
-import { Calendar, Clock, MapPin, Users, Beer, Camera, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Beer, Camera, CheckCircle2, AlertCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Progress } from '../ui/progress';
+import { StatusIndicator } from '../ui/status-indicator';
+import { useToast } from '../../hooks/use-toast';
 
 interface EventoDetailsProps {
   evento: Evento;
@@ -14,16 +16,7 @@ interface EventoDetailsProps {
 
 export function EventoDetails({ evento, onEdit, onAddEscala }: EventoDetailsProps) {
   const { updateEvento } = useApp();
-
-  const getStatusColor = (status: Evento['status']) => {
-    switch (status) {
-      case 'confirmado': return 'text-green-500';
-      case 'pendente': return 'text-yellow-500';
-      case 'cancelado': return 'text-red-500';
-      case 'finalizado': return 'text-blue-500';
-      default: return 'text-muted-foreground';
-    }
-  };
+  const { toast } = useToast();
 
   const getProgressoIcon = (concluido: boolean) => {
     return concluido ? (
@@ -39,20 +32,41 @@ export function EventoDetails({ evento, onEdit, onAddEscala }: EventoDetailsProp
     return (concluidos / steps.length) * 100;
   };
 
-  const handleToggleProgresso = (campo: keyof Evento['progresso']) => {
-    const novoProgresso = {
-      ...evento.progresso,
-      [campo]: !evento.progresso[campo]
-    };
+  const handleToggleProgresso = async (campo: keyof Evento['progresso']) => {
+    try {
+      const novoProgresso = {
+        ...evento.progresso,
+        [campo]: !evento.progresso[campo]
+      };
 
-    // Se todos os passos estiverem concluídos, marca como finalizado
-    if (Object.values(novoProgresso).every(Boolean)) {
-      updateEvento(evento.id, {
+      let novoStatus = evento.status;
+
+      // Atualiza o status baseado no progresso
+      if (campo === 'emAndamento' && !evento.progresso.emAndamento) {
+        novoStatus = 'em_andamento';
+      } else if (Object.values(novoProgresso).every(Boolean)) {
+        novoStatus = 'finalizado';
+      } else if (novoStatus === 'finalizado' && !Object.values(novoProgresso).every(Boolean)) {
+        novoStatus = 'em_andamento';
+      }
+
+      await updateEvento(evento.id, {
         progresso: novoProgresso,
-        status: 'finalizado'
+        status: novoStatus,
+        updatedAt: new Date()
       });
-    } else {
-      updateEvento(evento.id, { progresso: novoProgresso });
+
+      toast({
+        title: "Sucesso",
+        description: "Progresso atualizado com sucesso",
+        variant: "success",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar o progresso",
+        variant: "destructive",
+      });
     }
   };
 
@@ -65,14 +79,8 @@ export function EventoDetails({ evento, onEdit, onAddEscala }: EventoDetailsProp
               <Calendar className="h-5 w-5 text-primary" />
               <span>{evento.nome}</span>
             </CardTitle>
-            <div className="flex items-center space-x-2">
-              <span className={cn("text-sm flex items-center", getStatusColor(evento.status))}>
-                {evento.status === 'confirmado' && <CheckCircle2 className="h-4 w-4 mr-1" />}
-                {evento.status === 'pendente' && <AlertCircle className="h-4 w-4 mr-1" />}
-                {evento.status === 'cancelado' && <XCircle className="h-4 w-4 mr-1" />}
-                {evento.status === 'finalizado' && <CheckCircle2 className="h-4 w-4 mr-1" />}
-                {evento.status.charAt(0).toUpperCase() + evento.status.slice(1)}
-              </span>
+            <div className="flex items-center space-x-4">
+              <StatusIndicator status={evento.status} />
               <Button variant="outline" size="sm" onClick={onEdit}>
                 Editar
               </Button>
@@ -138,7 +146,9 @@ export function EventoDetails({ evento, onEdit, onAddEscala }: EventoDetailsProp
               <div className="grid gap-2">
                 <Button
                   variant="ghost"
-                  className="justify-start"
+                  className={cn("justify-start", {
+                    "hover:bg-green-50": evento.progresso.escalaCompleta
+                  })}
                   onClick={() => handleToggleProgresso('escalaCompleta')}
                 >
                   {getProgressoIcon(evento.progresso.escalaCompleta)}
@@ -147,7 +157,9 @@ export function EventoDetails({ evento, onEdit, onAddEscala }: EventoDetailsProp
 
                 <Button
                   variant="ghost"
-                  className="justify-start"
+                  className={cn("justify-start", {
+                    "hover:bg-green-50": evento.progresso.equipePronta
+                  })}
                   onClick={() => handleToggleProgresso('equipePronta')}
                 >
                   {getProgressoIcon(evento.progresso.equipePronta)}
@@ -156,7 +168,9 @@ export function EventoDetails({ evento, onEdit, onAddEscala }: EventoDetailsProp
 
                 <Button
                   variant="ghost"
-                  className="justify-start"
+                  className={cn("justify-start", {
+                    "hover:bg-green-50": evento.progresso.materiaisPreparados
+                  })}
                   onClick={() => handleToggleProgresso('materiaisPreparados')}
                 >
                   {getProgressoIcon(evento.progresso.materiaisPreparados)}
@@ -165,7 +179,9 @@ export function EventoDetails({ evento, onEdit, onAddEscala }: EventoDetailsProp
 
                 <Button
                   variant="ghost"
-                  className="justify-start"
+                  className={cn("justify-start", {
+                    "hover:bg-green-50": evento.progresso.checklistConcluido
+                  })}
                   onClick={() => handleToggleProgresso('checklistConcluido')}
                 >
                   {getProgressoIcon(evento.progresso.checklistConcluido)}
@@ -174,7 +190,9 @@ export function EventoDetails({ evento, onEdit, onAddEscala }: EventoDetailsProp
 
                 <Button
                   variant="ghost"
-                  className="justify-start"
+                  className={cn("justify-start", {
+                    "hover:bg-green-50": evento.progresso.emAndamento
+                  })}
                   onClick={() => handleToggleProgresso('emAndamento')}
                 >
                   {getProgressoIcon(evento.progresso.emAndamento)}
@@ -183,7 +201,9 @@ export function EventoDetails({ evento, onEdit, onAddEscala }: EventoDetailsProp
 
                 <Button
                   variant="ghost"
-                  className="justify-start"
+                  className={cn("justify-start", {
+                    "hover:bg-green-50": evento.progresso.finalizado
+                  })}
                   onClick={() => handleToggleProgresso('finalizado')}
                 >
                   {getProgressoIcon(evento.progresso.finalizado)}

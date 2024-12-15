@@ -35,7 +35,7 @@ export interface Evento {
     outrasCaracteristicas: string[];
   };
   observacoes?: string;
-  status: 'confirmado' | 'pendente' | 'cancelado' | 'finalizado';
+  status: 'pendente' | 'em_andamento' | 'finalizado' | 'cancelado';
   progresso: {
     escalaCompleta: boolean;
     equipePronta: boolean;

@@ -62,7 +62,7 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
         ...formData,
         data: formData.data,
         quantidadePessoas: Number(formData.quantidadePessoas),
-        status: evento?.status || 'pendente' as const,
+        status: evento?.status || 'pendente',
         progresso: evento?.progresso || {
           escalaCompleta: false,
           equipePronta: false,
@@ -83,11 +83,13 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
       if (evento) {
         await updateEvento(evento.id, {
           ...eventoData,
+          status: evento.status,
           updatedAt: new Date()
         });
       } else {
         await addEvento({
           ...eventoData,
+          status: 'pendente',
           createdAt: new Date(),
           updatedAt: new Date()
         });
