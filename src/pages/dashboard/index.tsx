@@ -27,13 +27,6 @@ export function DashboardPage() {
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button 
-            onClick={() => navigate('/pessoas/novo')}
-            className="gap-2 shadow-lg hover:shadow-xl transition-all"
-          >
-            <Users className="h-4 w-4" />
-            Nova Pessoa
-          </Button>
-          <Button 
             onClick={() => navigate('/eventos/novo')}
             className="gap-2 shadow-lg hover:shadow-xl transition-all"
           >

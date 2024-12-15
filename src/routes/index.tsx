@@ -7,6 +7,7 @@ import { EscalasPage } from '../pages/escalas';
 import { RelatoriosPage } from '../pages/relatorios';
 import { LoginPage } from '../pages/login';
 import { useAuth } from '../contexts/AuthContext';
+import { ErrorBoundary } from '../components/ui/error-boundary';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
@@ -27,6 +28,7 @@ const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+    errorElement: <ErrorBoundary error={new Error('Página não encontrada')} resetErrorBoundary={() => window.location.href = '/'} />
   },
   {
     path: '/',
@@ -37,6 +39,7 @@ const router = createBrowserRouter([
         </MainLayout>
       </PrivateRoute>
     ),
+    errorElement: <ErrorBoundary error={new Error('Página não encontrada')} resetErrorBoundary={() => window.location.href = '/'} />
   },
   {
     path: '/pessoas',
@@ -47,6 +50,7 @@ const router = createBrowserRouter([
         </MainLayout>
       </PrivateRoute>
     ),
+    errorElement: <ErrorBoundary error={new Error('Página não encontrada')} resetErrorBoundary={() => window.location.href = '/'} />
   },
   {
     path: '/eventos',
@@ -57,6 +61,29 @@ const router = createBrowserRouter([
         </MainLayout>
       </PrivateRoute>
     ),
+    errorElement: <ErrorBoundary error={new Error('Página não encontrada')} resetErrorBoundary={() => window.location.href = '/'} />
+  },
+  {
+    path: '/eventos/novo',
+    element: (
+      <PrivateRoute>
+        <MainLayout>
+          <EventosPage isNew />
+        </MainLayout>
+      </PrivateRoute>
+    ),
+    errorElement: <ErrorBoundary error={new Error('Página não encontrada')} resetErrorBoundary={() => window.location.href = '/eventos'} />
+  },
+  {
+    path: '/eventos/:id',
+    element: (
+      <PrivateRoute>
+        <MainLayout>
+          <EventosPage />
+        </MainLayout>
+      </PrivateRoute>
+    ),
+    errorElement: <ErrorBoundary error={new Error('Página não encontrada')} resetErrorBoundary={() => window.location.href = '/eventos'} />
   },
   {
     path: '/escalas',
@@ -67,6 +94,7 @@ const router = createBrowserRouter([
         </MainLayout>
       </PrivateRoute>
     ),
+    errorElement: <ErrorBoundary error={new Error('Página não encontrada')} resetErrorBoundary={() => window.location.href = '/'} />
   },
   {
     path: '/relatorios',
@@ -77,6 +105,7 @@ const router = createBrowserRouter([
         </MainLayout>
       </PrivateRoute>
     ),
+    errorElement: <ErrorBoundary error={new Error('Página não encontrada')} resetErrorBoundary={() => window.location.href = '/'} />
   },
 ]);
 
