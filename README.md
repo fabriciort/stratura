@@ -6,7 +6,7 @@
 </p>
 <p align="center"><h4 align="center"><i>STRATURA</h1></p>
 <p align="center">
-	<em>Sistema de Gestão de Eventos e Escalas</em>
+	<em>Sistema de Gestão de Eventos</em>
 </p>
 <p align="center">
     <img src="https://img.shields.io/badge/Status-Em_Desenvolvimento-orange" alt="Status">
