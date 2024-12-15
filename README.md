@@ -1,3 +1,6 @@
+<br>
+<br>
+
 <p align="center">
     <img src="public/svg/stratura.png" align="center" width="70%">
 </p>
@@ -42,6 +45,14 @@
 ##  Visão Geral
 
 O Stratura é um sistema de gestão de eventos e escalas sendo projetado para otimizar a organização de equipes e eventos.
+
+---
+
+### Dashboard Preview (v0.0.1) 
+
+<p align="center">
+    <img src="public/img/dashboard.png" align="center" width="80%">
+</p>
 
 ---
 
