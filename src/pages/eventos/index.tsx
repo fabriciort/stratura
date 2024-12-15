@@ -3,8 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { EventoForm } from '../../components/eventos/EventoForm';
 import { EventosList } from '../../components/eventos/EventosList';
+import { EventoDetails } from '../../components/eventos/EventoDetails';
 import { Button } from '../../components/ui/button';
 import { Plus } from 'lucide-react';
+import { Evento } from '../../types';
 
 interface EventosPageProps {
   isNew?: boolean;
@@ -15,16 +17,15 @@ export function EventosPage({ isNew }: EventosPageProps) {
   const { id } = useParams();
   const { eventos } = useApp();
   const [showForm, setShowForm] = useState(false);
-  const [selectedEvento, setSelectedEvento] = useState<any>(null);
+  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
 
   useEffect(() => {
     if (isNew) {
       setShowForm(true);
       setSelectedEvento(null);
     } else if (id) {
-      const evento = eventos.find(e => e.id === id);
+      const evento = eventos.find(e => e.id === Number(id));
       if (evento) {
-        setShowForm(true);
         setSelectedEvento(evento);
       } else {
         navigate('/eventos');
@@ -32,8 +33,9 @@ export function EventosPage({ isNew }: EventosPageProps) {
     }
   }, [isNew, id, eventos, navigate]);
 
-  const handleEdit = (evento: any) => {
-    navigate(`/eventos/${evento.id}`);
+  const handleEdit = (evento: Evento) => {
+    setShowForm(true);
+    setSelectedEvento(evento);
   };
 
   const handleClose = () => {
@@ -42,8 +44,24 @@ export function EventosPage({ isNew }: EventosPageProps) {
     navigate('/eventos');
   };
 
+  const handleAddEscala = () => {
+    if (selectedEvento) {
+      navigate(`/escalas/novo?eventoId=${selectedEvento.id}`);
+    }
+  };
+
   if (showForm) {
     return <EventoForm evento={selectedEvento} onClose={handleClose} />;
+  }
+
+  if (selectedEvento && !showForm) {
+    return (
+      <EventoDetails
+        evento={selectedEvento}
+        onEdit={() => setShowForm(true)}
+        onAddEscala={handleAddEscala}
+      />
+    );
   }
 
   return (
@@ -61,7 +79,7 @@ export function EventosPage({ isNew }: EventosPageProps) {
         </Button>
       </div>
 
-      <EventosList onEdit={handleEdit} />
+      <EventosList onEdit={(evento) => navigate(`/eventos/${evento.id}`)} />
     </div>
   );
 } 

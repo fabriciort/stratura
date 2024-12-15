@@ -38,22 +38,37 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
     }
   }, [pessoa]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const pessoaData = {
-      ...formData,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    
-    if (pessoa) {
-      updatePessoa(pessoa.id, { ...pessoaData, updatedAt: new Date() });
-    } else {
-      addPessoa(pessoaData);
+    try {
+      const pessoaData = {
+        ...formData,
+        disponibilidade: {
+          dias: formData.disponibilidade.dias || [],
+          periodos: formData.disponibilidade.periodos || []
+        },
+        funcaoSecundaria: formData.funcaoSecundaria || undefined,
+        observacoes: formData.observacoes || undefined
+      };
+      
+      if (pessoa) {
+        await updatePessoa(pessoa.id, {
+          ...pessoaData,
+          updatedAt: new Date()
+        });
+      } else {
+        await addPessoa({
+          ...pessoaData,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar pessoa:', error);
     }
-    
-    onClose();
   };
 
   const handleChange = (field: string, value: any) => {

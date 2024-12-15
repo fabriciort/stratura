@@ -5,6 +5,7 @@ import { PessoaForm } from '../../components/pessoas/PessoaForm';
 import { PessoasList } from '../../components/pessoas/PessoasList';
 import { Button } from '../../components/ui/button';
 import { Plus } from 'lucide-react';
+import { Pessoa } from '../../types';
 
 interface PessoasPageProps {
   isNew?: boolean;
@@ -15,14 +16,14 @@ export function PessoasPage({ isNew }: PessoasPageProps) {
   const { id } = useParams();
   const { pessoas } = useApp();
   const [showForm, setShowForm] = useState(false);
-  const [selectedPessoa, setSelectedPessoa] = useState<any>(null);
+  const [selectedPessoa, setSelectedPessoa] = useState<Pessoa | null>(null);
 
   useEffect(() => {
     if (isNew) {
       setShowForm(true);
       setSelectedPessoa(null);
     } else if (id) {
-      const pessoa = pessoas.find(p => p.id === id);
+      const pessoa = pessoas.find(p => p.id === Number(id));
       if (pessoa) {
         setShowForm(true);
         setSelectedPessoa(pessoa);
@@ -32,7 +33,7 @@ export function PessoasPage({ isNew }: PessoasPageProps) {
     }
   }, [isNew, id, pessoas, navigate]);
 
-  const handleEdit = (pessoa: any) => {
+  const handleEdit = (pessoa: Pessoa) => {
     navigate(`/pessoas/${pessoa.id}`);
   };
 
