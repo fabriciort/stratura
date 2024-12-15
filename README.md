@@ -51,7 +51,7 @@ O Stratura é um sistema de gestão de eventos e escalas sendo projetado para ot
 ### Dashboard Preview (v0.0.1) 
 
 <p align="center">
-    <img src="public/img/dashboard.png" align="center" width="80%">
+    <img src="public/gif/dashboard.gif" align="center" width="80%">
 </p>
 
 ---
