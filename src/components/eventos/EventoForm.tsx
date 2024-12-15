@@ -60,11 +60,14 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
     const eventoData = {
       ...formData,
       data: new Date(formData.data),
-      quantidadePessoas: Number(formData.quantidadePessoas)
+      quantidadePessoas: Number(formData.quantidadePessoas),
+      status: 'pendente' as const,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     if (evento) {
-      updateEvento(evento.id, eventoData);
+      updateEvento(evento.id, { ...eventoData, updatedAt: new Date() });
     } else {
       addEvento(eventoData);
     }

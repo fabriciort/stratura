@@ -24,15 +24,19 @@ export interface Evento {
   tipo: string;
   quantidadePessoas: number;
   caracteristicas: {
-    bebidas: boolean;
-    fotografia: boolean;
     cardapio: {
       nome: string;
       itens: ItemCardapio[];
     };
+    temBebidas: boolean;
+    tipoBebidas: ('cerveja' | 'chopp' | 'drinks' | 'refrigerante' | 'agua')[];
+    temCabineFoto: boolean;
+    tipoCabineFoto: 'propria' | 'externa' | undefined;
+    outrasCaracteristicas: string[];
   };
   observacoes?: string;
   status: 'confirmado' | 'pendente' | 'cancelado';
+  escala?: Escala;
   createdAt: Date;
   updatedAt: Date;
 }

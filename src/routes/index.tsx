@@ -53,6 +53,28 @@ const router = createBrowserRouter([
     errorElement: <ErrorBoundary error={new Error('Página não encontrada')} resetErrorBoundary={() => window.location.href = '/'} />
   },
   {
+    path: '/pessoas/novo',
+    element: (
+      <PrivateRoute>
+        <MainLayout>
+          <PessoasPage isNew />
+        </MainLayout>
+      </PrivateRoute>
+    ),
+    errorElement: <ErrorBoundary error={new Error('Página não encontrada')} resetErrorBoundary={() => window.location.href = '/pessoas'} />
+  },
+  {
+    path: '/pessoas/:id',
+    element: (
+      <PrivateRoute>
+        <MainLayout>
+          <PessoasPage />
+        </MainLayout>
+      </PrivateRoute>
+    ),
+    errorElement: <ErrorBoundary error={new Error('Página não encontrada')} resetErrorBoundary={() => window.location.href = '/pessoas'} />
+  },
+  {
     path: '/eventos',
     element: (
       <PrivateRoute>
