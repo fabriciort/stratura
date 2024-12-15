@@ -18,12 +18,12 @@ export function StatusIndicator({ status, className }: StatusIndicatorProps) {
       >
         <span
           className={cn(
-            "absolute inline-flex h-full w-full rounded-full",
+            "absolute inline-flex h-full w-full rounded-full opacity-75",
             {
-              "bg-yellow-500/75": status === 'pendente',
-              "bg-green-500/75 animate-[ping_2s_ease-in-out_infinite]": status === 'em_andamento',
-              "bg-blue-500/75": status === 'finalizado',
-              "bg-red-500/75": status === 'cancelado'
+              "bg-yellow-500/75 dark:bg-yellow-500/50": status === 'pendente',
+              "bg-green-500/75 dark:bg-emerald-400/50 animate-[ping_2s_ease-in-out_infinite]": status === 'em_andamento',
+              "bg-blue-500/75 dark:bg-blue-400/50": status === 'finalizado',
+              "bg-red-500/75 dark:bg-red-500/50": status === 'cancelado'
             }
           )}
         />
@@ -31,10 +31,10 @@ export function StatusIndicator({ status, className }: StatusIndicatorProps) {
           className={cn(
             "relative inline-flex rounded-full h-3 w-3",
             {
-              "bg-yellow-500": status === 'pendente',
-              "bg-green-500": status === 'em_andamento',
-              "bg-blue-500": status === 'finalizado',
-              "bg-red-500": status === 'cancelado'
+              "bg-yellow-500 dark:bg-yellow-400": status === 'pendente',
+              "bg-green-500 dark:bg-emerald-400": status === 'em_andamento',
+              "bg-blue-500 dark:bg-blue-400": status === 'finalizado',
+              "bg-red-500 dark:bg-red-400": status === 'cancelado'
             }
           )}
         />
@@ -42,10 +42,10 @@ export function StatusIndicator({ status, className }: StatusIndicatorProps) {
       <span className={cn(
         "text-sm font-medium",
         {
-          "text-yellow-600": status === 'pendente',
-          "text-green-600": status === 'em_andamento',
-          "text-blue-600": status === 'finalizado',
-          "text-red-600": status === 'cancelado'
+          "text-yellow-600 dark:text-yellow-400": status === 'pendente',
+          "text-green-600 dark:text-emerald-400": status === 'em_andamento',
+          "text-blue-600 dark:text-blue-400": status === 'finalizado',
+          "text-red-600 dark:text-red-400": status === 'cancelado'
         }
       )}>
         {status === 'pendente' && 'Pendente'}
