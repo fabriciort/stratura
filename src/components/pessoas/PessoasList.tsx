@@ -1,31 +1,26 @@
 import { useState } from 'react';
 import { useApp } from '../../contexts/AppContext';
-import { Button } from '../ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import { Button } from '../ui/button';
+import { User, Mail, Phone, Briefcase, Calendar, Edit2, Trash2, Search } from 'lucide-react';
+import { useToast } from '../../hooks/use-toast';
+import { cn } from '../../lib/utils';
 import { Pessoa } from '../../types';
-import { Users, Mail, Phone, Briefcase, Calendar, Search, Filter, Edit2, Trash2 } from 'lucide-react';
-import { LoadingList } from '../ui/loading-list';
-import { useToast } from '../../hooks/useToast';
 
 interface PessoasListProps {
   onEdit: (pessoa: Pessoa) => void;
 }
 
-const FUNCOES = ['Garçom', 'Copeiro', 'Cozinheiro', 'Auxiliar'] as const;
-
 export function PessoasList({ onEdit }: PessoasListProps) {
   const { pessoas, deletePessoa } = useApp();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [funcaoFiltro, setFuncaoFiltro] = useState<string>('');
+  const [funcaoFiltro, setFuncaoFiltro] = useState<string>('Todas');
 
   const handleDelete = async (pessoa: Pessoa) => {
-    if (window.confirm(`Tem certeza que deseja excluir ${pessoa.nome}?`)) {
+    if (window.confirm(`Tem certeza que deseja excluir "${pessoa.nome}"?`)) {
       try {
-        setLoading(true);
         deletePessoa(pessoa.id);
         toast({
           title: "Pessoa excluída",
@@ -38,32 +33,37 @@ export function PessoasList({ onEdit }: PessoasListProps) {
           description: "Não foi possível excluir a pessoa. Tente novamente.",
           variant: "destructive",
         });
-      } finally {
-        setLoading(false);
       }
     }
   };
 
-  const filteredPessoas = pessoas.filter((pessoa) => {
+  const getFuncoes = () => {
+    const funcoes = new Set<string>();
+    pessoas.forEach(pessoa => {
+      funcoes.add(pessoa.funcaoPrincipal);
+      if (pessoa.funcaoSecundaria) {
+        funcoes.add(pessoa.funcaoSecundaria);
+      }
+    });
+    return Array.from(funcoes);
+  };
+
+  const filteredPessoas = pessoas.filter(pessoa => {
     const matchesSearch = pessoa.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       pessoa.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFuncao = !funcaoFiltro || pessoa.funcaoPrincipal === funcaoFiltro;
+    const matchesFuncao = funcaoFiltro === 'Todas' || 
+      pessoa.funcaoPrincipal === funcaoFiltro || 
+      pessoa.funcaoSecundaria === funcaoFiltro;
     return matchesSearch && matchesFuncao;
   });
-
-  if (loading) {
-    return <LoadingList count={6} />;
-  }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
-          <Label htmlFor="search">Buscar</Label>
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              id="search"
               placeholder="Buscar por nome ou email..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -71,32 +71,25 @@ export function PessoasList({ onEdit }: PessoasListProps) {
             />
           </div>
         </div>
-        <div className="w-full sm:w-48">
-          <Label htmlFor="funcao">Filtrar por Função</Label>
-          <div className="relative">
-            <Filter className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <select
-              id="funcao"
-              value={funcaoFiltro}
-              onChange={(e) => setFuncaoFiltro(e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              <option value="">Todas as funções</option>
-              {FUNCOES.map((funcao) => (
-                <option key={funcao} value={funcao}>{funcao}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <select
+          className="flex h-9 w-full sm:w-[200px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          value={funcaoFiltro}
+          onChange={(e) => setFuncaoFiltro(e.target.value)}
+        >
+          <option value="Todas">Todas as funções</option>
+          {getFuncoes().map(funcao => (
+            <option key={funcao} value={funcao}>{funcao}</option>
+          ))}
+        </select>
       </div>
 
       {filteredPessoas.length === 0 ? (
         <Card className="p-8 text-center">
           <div className="flex flex-col items-center gap-2">
-            <Users className="h-8 w-8 text-muted-foreground" />
+            <User className="h-8 w-8 text-muted-foreground" />
             <h3 className="font-semibold">Nenhuma pessoa encontrada</h3>
             <p className="text-sm text-muted-foreground">
-              {searchTerm || funcaoFiltro
+              {searchTerm || funcaoFiltro !== 'Todas'
                 ? "Tente ajustar os filtros de busca"
                 : "Comece adicionando uma nova pessoa"}
             </p>
@@ -109,7 +102,7 @@ export function PessoasList({ onEdit }: PessoasListProps) {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Users className="h-5 w-5 text-muted-foreground" />
+                    <User className="h-5 w-5 text-primary" />
                     <span>{pessoa.nome}</span>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -143,15 +136,52 @@ export function PessoasList({ onEdit }: PessoasListProps) {
                   <div className="flex items-center text-sm">
                     <Briefcase className="h-4 w-4 mr-2 text-muted-foreground" />
                     {pessoa.funcaoPrincipal}
-                    {pessoa.funcoesSecundarias.length > 0 && (
+                    {pessoa.funcaoSecundaria && (
                       <span className="text-muted-foreground ml-1">
-                        (+{pessoa.funcoesSecundarias.length})
+                        ({pessoa.funcaoSecundaria})
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center text-sm">
-                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                    {pessoa.disponibilidade.dias.length} dias disponíveis
+                  
+                  <div className="border-t pt-2 mt-2 space-y-2">
+                    <div className="flex items-center text-sm">
+                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span className="font-medium">Disponibilidade:</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Dias:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {pessoa.disponibilidade.dias.map(dia => (
+                            <span
+                              key={dia}
+                              className={cn(
+                                "px-2 py-0.5 rounded-full text-xs",
+                                "bg-primary/10 text-primary"
+                              )}
+                            >
+                              {dia}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Períodos:</span>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {pessoa.disponibilidade.periodos.map(periodo => (
+                            <span
+                              key={periodo}
+                              className={cn(
+                                "px-2 py-0.5 rounded-full text-xs",
+                                "bg-primary/10 text-primary"
+                              )}
+                            >
+                              {periodo}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>

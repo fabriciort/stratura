@@ -6,7 +6,7 @@
 </p>
 <p align="center"><h4 align="center"><i>STRATURA</h1></p>
 <p align="center">
-	<em>Sistema de Gestão de Eventos e Escalas</em>
+	<em>Sistema de Gestão de Eventos</em>
 </p>
 <p align="center">
     <img src="https://img.shields.io/badge/Status-Em_Desenvolvimento-orange" alt="Status">
@@ -48,10 +48,10 @@ O Stratura é um sistema de gestão de eventos e escalas sendo projetado para ot
 
 ---
 
-### Dashboard Preview (v0.0.1) 
+### Dashboard Preview (v0.0.1) (MVP)
 
 <p align="center">
-    <img src="public/gif/dashboard-700p.gif" align="center" width="80%">
+    <img src="public/gif/dashboard-mvp.gif" align="center" width="80%">
 </p>
 
 ---

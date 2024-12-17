@@ -1,5 +1,5 @@
 export interface Pessoa {
-  id: string;
+  id: number;
   nome: string;
   email: string;
   telefone: string;
@@ -15,7 +15,7 @@ export interface Pessoa {
 }
 
 export interface Evento {
-  id: string;
+  id: number;
   nome: string;
   data: string;
   horarioInicio: string;
@@ -24,15 +24,27 @@ export interface Evento {
   tipo: string;
   quantidadePessoas: number;
   caracteristicas: {
-    bebidas: boolean;
-    fotografia: boolean;
     cardapio: {
       nome: string;
       itens: ItemCardapio[];
     };
+    temBebidas: boolean;
+    tipoBebidas: ('cerveja' | 'chopp' | 'drinks' | 'refrigerante' | 'agua')[];
+    temCabineFoto: boolean;
+    tipoCabineFoto: 'propria' | 'externa' | undefined;
+    outrasCaracteristicas: string[];
   };
   observacoes?: string;
-  status: 'confirmado' | 'pendente' | 'cancelado';
+  status: 'pendente' | 'em_andamento' | 'finalizado' | 'cancelado';
+  progresso: {
+    escalaCompleta: boolean;
+    equipePronta: boolean;
+    materiaisPreparados: boolean;
+    checklistConcluido: boolean;
+    emAndamento: boolean;
+    finalizado: boolean;
+  };
+  escala?: Escala;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -44,10 +56,10 @@ export interface ItemCardapio {
 }
 
 export interface Escala {
-  id: string;
-  eventoId: string;
+  id: number;
+  eventoId: number;
   pessoas: {
-    pessoaId: string;
+    pessoaId: number;
     funcao: string;
     confirmado: boolean;
   }[];
@@ -66,20 +78,20 @@ export type NotificacaoTipo =
   | 'lembrete_evento';
 
 export interface Notificacao {
-  id: string;
+  id: number;
   tipo: NotificacaoTipo;
   titulo: string;
   mensagem: string;
   data: Date;
   lida: boolean;
   dadosAdicionais?: {
-    eventoId?: string;
-    escalaId?: string;
+    eventoId?: number;
+    escalaId?: number;
   };
 }
 
 export interface Usuario {
-  id: string;
+  id: number;
   name: string;
   email: string;
   role: 'admin' | 'user';

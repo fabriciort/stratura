@@ -8,32 +8,56 @@ export function DashboardStats() {
 
   const getEventosStats = () => {
     const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
     const ultimoMes = new Date();
     ultimoMes.setMonth(ultimoMes.getMonth() - 1);
+    const doisMesesAtras = new Date();
+    doisMesesAtras.setMonth(doisMesesAtras.getMonth() - 2);
 
-    const eventosAtivos = eventos.filter(e => new Date(e.data) >= hoje);
+    const eventosAtivos = eventos.filter(e => {
+      const dataEvento = new Date(e.data);
+      return (
+        dataEvento >= hoje ||
+        e.status === 'em_andamento' ||
+        (e.status === 'pendente' && dataEvento.toDateString() === hoje.toDateString())
+      );
+    });
+
     const eventosUltimoMes = eventos.filter(e => {
       const data = new Date(e.data);
       return data >= ultimoMes && data <= hoje;
+    });
+
+    const eventosDoisMesesAtras = eventos.filter(e => {
+      const data = new Date(e.data);
+      return data >= doisMesesAtras && data < ultimoMes;
     });
 
     return {
       total: eventos.length,
       ativos: eventosAtivos.length,
       ultimoMes: eventosUltimoMes.length,
-      crescimento: eventosUltimoMes.length > 0
+      crescimento: eventosUltimoMes.length >= eventosDoisMesesAtras.length
     };
   };
 
   const getPessoasStats = () => {
-    const pessoasAtivas = new Set(
-      escalas.flatMap(escala => escala.pessoas.map(p => p.pessoaId))
+    const hoje = new Date();
+    const ultimoMes = new Date();
+    ultimoMes.setMonth(ultimoMes.getMonth() - 1);
+
+    const pessoasAtivasHoje = new Set(
+      escalas.filter(e => new Date(e.createdAt) >= ultimoMes).flatMap(escala => escala.pessoas.map(p => p.pessoaId))
+    ).size;
+
+    const pessoasAtivasAntes = new Set(
+      escalas.filter(e => new Date(e.createdAt) < ultimoMes).flatMap(escala => escala.pessoas.map(p => p.pessoaId))
     ).size;
 
     return {
       total: pessoas.length,
-      ativas: pessoasAtivas,
-      crescimento: pessoasAtivas / pessoas.length > 0.7
+      ativas: pessoasAtivasHoje,
+      crescimento: pessoasAtivasHoje >= pessoasAtivasAntes
     };
   };
 

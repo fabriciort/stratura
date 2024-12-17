@@ -54,22 +54,51 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
     }
   }, [evento]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const eventoData = {
-      ...formData,
-      data: new Date(formData.data),
-      quantidadePessoas: Number(formData.quantidadePessoas)
-    };
-    
-    if (evento) {
-      updateEvento(evento.id, eventoData);
-    } else {
-      addEvento(eventoData);
+    try {
+      const eventoData = {
+        ...formData,
+        data: formData.data,
+        quantidadePessoas: Number(formData.quantidadePessoas),
+        status: evento?.status || 'pendente',
+        progresso: evento?.progresso || {
+          escalaCompleta: false,
+          equipePronta: false,
+          materiaisPreparados: false,
+          checklistConcluido: false,
+          emAndamento: false,
+          finalizado: false
+        },
+        caracteristicas: {
+          ...formData.caracteristicas,
+          cardapio: {
+            ...formData.caracteristicas.cardapio,
+            itens: formData.caracteristicas.cardapio.itens || []
+          }
+        }
+      };
+      
+      if (evento) {
+        await updateEvento(evento.id, {
+          ...eventoData,
+          status: evento.status,
+          updatedAt: new Date()
+        });
+      } else {
+        await addEvento({
+          ...eventoData,
+          status: 'pendente',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+      
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar evento:', error);
     }
-    
-    onClose();
   };
 
   const handleChange = (field: string, value: any) => {

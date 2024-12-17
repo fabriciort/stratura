@@ -6,6 +6,7 @@ import { NotificacoesPopover } from '../notificacoes/NotificacoesPopover';
 import { SearchCommand } from './SearchCommand';
 import { Menu, X, Calendar, Users, ClipboardList, BarChart2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { ThemeToggle } from '../ui/theme-toggle';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -100,16 +101,20 @@ export function MainLayout({ children }: MainLayoutProps) {
             <div className="w-full flex-1 md:w-auto md:flex-none">
               <SearchCommand />
             </div>
-            <NotificacoesPopover />
-            <div className="hidden md:flex items-center space-x-4">
-              <span className="text-sm text-muted-foreground">
-                {user?.name}
-              </span>
-              <Button 
-                variant="outline" 
-                size="sm" 
+            <div className="flex items-center space-x-2">
+              <ThemeToggle />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
                 onClick={logout}
-                className="hover:bg-destructive hover:text-destructive-foreground"
+              >
+                <span className="sr-only">Sair</span>
+              </Button>
+              <Button
+                variant="ghost"
+                className="hidden md:flex hover:bg-destructive hover:text-destructive-foreground"
+                onClick={logout}
               >
                 Sair
               </Button>

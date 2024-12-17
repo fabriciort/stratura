@@ -1,32 +1,68 @@
-import { useState } from 'react';
-import { PessoasList } from '../../components/pessoas/PessoasList';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useApp } from '../../contexts/AppContext';
 import { PessoaForm } from '../../components/pessoas/PessoaForm';
-import { Dialog, DialogContent } from '../../components/ui/dialog';
+import { PessoasList } from '../../components/pessoas/PessoasList';
+import { Button } from '../../components/ui/button';
+import { Plus } from 'lucide-react';
 import { Pessoa } from '../../types';
 
-export function PessoasPage() {
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedPessoa, setSelectedPessoa] = useState<Pessoa | undefined>(undefined);
+interface PessoasPageProps {
+  isNew?: boolean;
+}
 
-  const handleOpenForm = (pessoa?: Pessoa) => {
-    setSelectedPessoa(pessoa);
-    setIsFormOpen(true);
+export function PessoasPage({ isNew }: PessoasPageProps) {
+  const navigate = useNavigate();
+  const { id } = useParams();
+  const { pessoas } = useApp();
+  const [showForm, setShowForm] = useState(false);
+  const [selectedPessoa, setSelectedPessoa] = useState<Pessoa | null>(null);
+
+  useEffect(() => {
+    if (isNew) {
+      setShowForm(true);
+      setSelectedPessoa(null);
+    } else if (id) {
+      const pessoa = pessoas.find(p => p.id === Number(id));
+      if (pessoa) {
+        setShowForm(true);
+        setSelectedPessoa(pessoa);
+      } else {
+        navigate('/pessoas');
+      }
+    }
+  }, [isNew, id, pessoas, navigate]);
+
+  const handleEdit = (pessoa: Pessoa) => {
+    navigate(`/pessoas/${pessoa.id}`);
   };
 
-  const handleCloseForm = () => {
-    setSelectedPessoa(undefined);
-    setIsFormOpen(false);
+  const handleClose = () => {
+    setShowForm(false);
+    setSelectedPessoa(null);
+    navigate('/pessoas');
   };
+
+  if (showForm) {
+    return <PessoaForm pessoa={selectedPessoa} onClose={handleClose} />;
+  }
 
   return (
-    <>
-      <PessoasList onEdit={handleOpenForm} />
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Pessoas</h1>
+          <p className="text-muted-foreground">
+            Gerencie o cadastro de pessoas disponíveis para eventos
+          </p>
+        </div>
+        <Button onClick={() => navigate('/pessoas/novo')} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Nova Pessoa
+        </Button>
+      </div>
 
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl">
-          <PessoaForm pessoa={selectedPessoa} onClose={handleCloseForm} />
-        </DialogContent>
-      </Dialog>
-    </>
+      <PessoasList onEdit={handleEdit} />
+    </div>
   );
 } 
