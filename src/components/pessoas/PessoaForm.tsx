@@ -4,12 +4,13 @@ import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Pessoa } from '../../types';
-import { User, Phone, Mail, Calendar, Clock, ClipboardList } from 'lucide-react';
+import { User, Phone, Mail, Calendar, Clock } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useToast } from '../../hooks/use-toast';
 import { cn } from '../../lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { Input } from '../ui/input';
+import { DialogHeader, DialogTitle } from '../ui/dialog';
 
 interface PessoaFormProps {
   pessoa?: Pessoa;
@@ -24,11 +25,15 @@ const DIAS_SEMANA = [
   'Sexta-feira',
   'Sábado',
   'Domingo'
-];
+] as const;
 
-const PERIODOS = ['Manhã', 'Tarde', 'Noite'];
+const PERIODOS = ['Manhã', 'Tarde', 'Noite'] as const;
 
-const FUNCOES = ['Garçom', 'Bartender', 'Coordenador', 'Auxiliar'];
+const FUNCOES = ['Garçom', 'Bartender', 'Coordenador', 'Auxiliar'] as const;
+
+type DiaSemana = typeof DIAS_SEMANA[number];
+type Periodo = typeof PERIODOS[number];
+type Funcao = typeof FUNCOES[number];
 
 export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
   const { addPessoa, updatePessoa } = useApp();
@@ -40,8 +45,8 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
     funcaoPrincipal: '',
     funcaoSecundaria: '',
     disponibilidade: {
-      dias: [],
-      periodos: []
+      dias: [] as DiaSemana[],
+      periodos: [] as Periodo[]
     },
     observacoes: ''
   });
@@ -108,7 +113,7 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
     }
   };
 
-  const toggleDia = (dia: string) => {
+  const toggleDia = (dia: DiaSemana) => {
     setFormData(prev => ({
       ...prev,
       disponibilidade: {
@@ -120,7 +125,7 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
     }));
   };
 
-  const togglePeriodo = (periodo: string) => {
+  const togglePeriodo = (periodo: Periodo) => {
     setFormData(prev => ({
       ...prev,
       disponibilidade: {
@@ -133,18 +138,18 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[80vh]">
-      <div className="flex items-center justify-between pb-4 border-b">
-        <div className="flex items-center space-x-2">
-          <User className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">
-            {pessoa ? 'Editar Pessoa' : 'Nova Pessoa'}
-          </h2>
-        </div>
-      </div>
+    <div className="flex flex-col h-[calc(100vh-8rem)]">
+      <DialogHeader>
+        <DialogTitle>
+          <div className="flex items-center space-x-2">
+            <User className="h-5 w-5 text-primary" />
+            <span>{pessoa ? 'Editar Pessoa' : 'Nova Pessoa'}</span>
+          </div>
+        </DialogTitle>
+      </DialogHeader>
 
-      <ScrollArea className="flex-1 px-1">
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
+      <ScrollArea className="flex-1 px-1 -mx-6">
+        <form onSubmit={handleSubmit} className="space-y-6 py-4 px-6">
           <div className="grid gap-6">
             {/* Informações Básicas */}
             <Card>
