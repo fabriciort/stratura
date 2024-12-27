@@ -105,4 +105,48 @@ export interface Usuario {
   role: 'admin' | 'user';
   createdAt: Date;
   updatedAt: Date;
+}
+
+export type MensagemTipo = 'texto' | 'imagem' | 'arquivo' | 'whatsapp';
+
+export interface Mensagem {
+  id: string;
+  remetente: {
+    id: string;
+    nome: string;
+  };
+  conteudo: string;
+  tipo: MensagemTipo;
+  data: Date;
+  lida: boolean;
+  eventoId?: string;
+  escalaId?: string;
+  whatsappId?: string;
+  whatsappStatus?: 'enviada' | 'entregue' | 'lida';
+}
+
+export interface Chat {
+  id: string;
+  tipo: 'privado' | 'grupo' | 'evento';
+  nome?: string;
+  eventoId?: string;
+  escalaId?: string;
+  participantes: {
+    id: string;
+    nome: string;
+    ultimaVisualizacao?: Date;
+  }[];
+  mensagens: Mensagem[];
+  whatsappGroupId?: string;
+}
+
+export interface WhatsappConfig {
+  enabled: boolean;
+  apiKey?: string;
+  phoneNumber?: string;
+  defaultMessage?: string;
+  notifyOnNewEvent: boolean;
+  notifyOnEscalaUpdate: boolean;
+  notifyBeforeEvento: boolean;
+  horasAntesEvento: number;
 } 

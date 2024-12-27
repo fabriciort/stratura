@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../contexts/AppContext';
 import { Command } from 'cmdk';
-import { Search, Calendar, Users, ClipboardList } from 'lucide-react';
+import { Search, Calendar, Users, ClipboardList, Settings } from 'lucide-react';
 
 export function SearchCommand() {
   const [open, setOpen] = useState(false);
@@ -131,6 +131,14 @@ export function SearchCommand() {
               >
                 <Calendar className="mr-2 h-4 w-4" />
                 Novo Evento
+              </Command.Item>
+              <Command.Item
+                value="/configuracoes"
+                onSelect={handleSelect}
+                className="flex items-center px-2 py-1 rounded-md hover:bg-accent cursor-pointer"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Configurações
               </Command.Item>
             </Command.Group>
           </Command.List>

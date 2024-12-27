@@ -5,6 +5,7 @@ import { PessoasPage } from '../pages/pessoas';
 import { EventosPage } from '../pages/eventos';
 import { EscalasPage } from '../pages/escalas';
 import { RelatoriosPage } from '../pages/relatorios';
+import { ConfiguracoesPage } from '../pages/configuracoes';
 import { LoginPage } from '../pages/login';
 import { useAuth } from '../contexts/AuthContext';
 import { ErrorBoundary } from '../components/ui/error-boundary';
@@ -124,6 +125,17 @@ const router = createBrowserRouter([
       <PrivateRoute>
         <MainLayout>
           <RelatoriosPage />
+        </MainLayout>
+      </PrivateRoute>
+    ),
+    errorElement: <ErrorBoundary error={new Error('Página não encontrada')} resetErrorBoundary={() => window.location.href = '/'} />
+  },
+  {
+    path: '/configuracoes',
+    element: (
+      <PrivateRoute>
+        <MainLayout>
+          <ConfiguracoesPage />
         </MainLayout>
       </PrivateRoute>
     ),

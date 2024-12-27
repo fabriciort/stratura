@@ -8,11 +8,15 @@ import { Plus } from 'lucide-react';
 import { Pessoa } from '../../types';
 import { Dialog, DialogContent } from '../../components/ui/dialog';
 
-export function PessoasPage() {
+interface PessoasPageProps {
+  isNew?: boolean;
+}
+
+export function PessoasPage({ isNew }: PessoasPageProps) {
   const navigate = useNavigate();
   const { id } = useParams();
   const { pessoas } = useApp();
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(isNew || false);
   const [selectedPessoa, setSelectedPessoa] = useState<Pessoa | undefined>();
 
   useEffect(() => {
@@ -39,6 +43,9 @@ export function PessoasPage() {
   const handleCloseForm = () => {
     setIsFormOpen(false);
     setSelectedPessoa(undefined);
+    if (isNew) {
+      navigate('/pessoas');
+    }
   };
 
   return (

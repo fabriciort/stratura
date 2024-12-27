@@ -91,8 +91,8 @@ export function EscalaForm({ escala, eventoId, onClose }: EscalaFormProps) {
         status: formData.status,
         observacoes: formData.observacoes
       };
-
-      if (escala) {
+    
+    if (escala) {
         await updateEscala(escala.id, {
           ...escalaData,
           updatedAt: new Date()
@@ -102,7 +102,7 @@ export function EscalaForm({ escala, eventoId, onClose }: EscalaFormProps) {
           description: "Escala atualizada com sucesso",
           variant: "success",
         });
-      } else {
+    } else {
         await addEscala({
           ...escalaData,
           createdAt: new Date(),
@@ -172,14 +172,14 @@ export function EscalaForm({ escala, eventoId, onClose }: EscalaFormProps) {
         <div className="flex items-center space-x-2">
           <Calendar className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-semibold">{eventoSelecionado.nome}</h2>
-        </div>
+              </div>
         <div className="flex items-center space-x-2 text-sm text-muted-foreground">
           <Clock className="h-4 w-4" />
           <span>{new Date(eventoSelecionado.data).toLocaleDateString('pt-BR')}</span>
           <span>•</span>
           <span>{eventoSelecionado.horarioInicio} às {eventoSelecionado.horarioFim}</span>
-        </div>
-      </div>
+            </div>
+          </div>
 
       <ScrollArea className="flex-1 px-1">
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
@@ -191,28 +191,28 @@ export function EscalaForm({ escala, eventoId, onClose }: EscalaFormProps) {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
+                <div className="space-y-2">
                     <Label>Pessoa</Label>
                     <Select 
-                      value={novaPessoa.pessoaId} 
+                    value={novaPessoa.pessoaId}
                       onValueChange={(value) => setNovaPessoa(prev => ({ ...prev, pessoaId: value }))}
-                    >
+                  >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione uma pessoa" />
                       </SelectTrigger>
                       <SelectContent>
-                        {pessoasDisponiveis.map((pessoa) => (
+                    {pessoasDisponiveis.map((pessoa) => (
                           <SelectItem key={pessoa.id} value={pessoa.id.toString()}>
                             {pessoa.nome}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="space-y-2">
+                </div>
+                <div className="space-y-2">
                     <Label>Função</Label>
                     <Select 
-                      value={novaPessoa.funcao} 
+                    value={novaPessoa.funcao}
                       onValueChange={(value) => setNovaPessoa(prev => ({ ...prev, funcao: value }))}
                     >
                       <SelectTrigger>
@@ -257,10 +257,10 @@ export function EscalaForm({ escala, eventoId, onClose }: EscalaFormProps) {
                             <p className="text-sm text-muted-foreground">{pessoa.funcao}</p>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Button
-                              type="button"
+                  <Button
+                    type="button"
                               variant={pessoa.confirmado ? "default" : "outline"}
-                              size="sm"
+                    size="sm"
                               onClick={() => {
                                 setFormData(prev => ({
                                   ...prev,
@@ -271,17 +271,17 @@ export function EscalaForm({ escala, eventoId, onClose }: EscalaFormProps) {
                               }}
                             >
                               <Check className={cn("h-4 w-4", pessoa.confirmado ? "text-white" : "text-muted-foreground")} />
-                            </Button>
-                            <Button
-                              type="button"
+                  </Button>
+                    <Button
+                      type="button"
                               variant="destructive"
-                              size="sm"
-                              onClick={() => removerPessoa(index)}
-                            >
+                      size="sm"
+                      onClick={() => removerPessoa(index)}
+                    >
                               <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
+                    </Button>
+                  </div>
+              </div>
                         <p className="text-sm text-muted-foreground mt-2">
                           {pessoa.confirmado ? "Confirmado" : "Aguardando confirmação"}
                         </p>
@@ -292,7 +292,7 @@ export function EscalaForm({ escala, eventoId, onClose }: EscalaFormProps) {
                       Nenhuma pessoa escalada ainda
                     </p>
                   )}
-                </div>
+            </div>
               </CardContent>
             </Card>
 
@@ -302,10 +302,10 @@ export function EscalaForm({ escala, eventoId, onClose }: EscalaFormProps) {
                 <CardTitle className="text-base">Detalhes da Escala</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
+          <div className="space-y-2">
                   <Label>Status da Escala</Label>
                   <Select 
-                    value={formData.status} 
+              value={formData.status}
                     onValueChange={(value: Escala['status']) => setFormData(prev => ({ ...prev, status: value }))}
                   >
                     <SelectTrigger>
@@ -322,32 +322,32 @@ export function EscalaForm({ escala, eventoId, onClose }: EscalaFormProps) {
                     {formData.status === 'confirmada' && 'A escala está confirmada e as pessoas foram notificadas'}
                     {formData.status === 'finalizada' && 'O evento foi realizado e a escala está finalizada'}
                   </p>
-                </div>
+          </div>
 
-                <div className="space-y-2">
+          <div className="space-y-2">
                   <Label>Observações</Label>
-                  <textarea
-                    value={formData.observacoes}
+            <textarea
+              value={formData.observacoes}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
                     placeholder="Adicione observações sobre a escala..."
                     className={cn(
                       "flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                     )}
-                  />
-                </div>
-              </CardContent>
+            />
+          </div>
+        </CardContent>
             </Card>
           </div>
         </form>
       </ScrollArea>
 
       <div className="flex justify-end space-x-4 pt-4 border-t mt-4">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancelar
-        </Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
         <Button onClick={handleSubmit}>
           {escala ? 'Atualizar Escala' : 'Criar Escala'}
-        </Button>
+          </Button>
       </div>
     </div>
   );

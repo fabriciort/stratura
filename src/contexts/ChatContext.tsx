@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Chat, Mensagem, User } from '../types';
+import { Chat, Mensagem } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from './AuthContext';
 
@@ -16,6 +16,72 @@ interface ChatContextType {
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
+
+// Chats de exemplo para teste
+const CHATS_EXEMPLO: Chat[] = [
+  {
+    id: '1',
+    tipo: 'privado',
+    participantes: [
+      { id: 'user1', nome: 'Você' },
+      { id: 'user2', nome: 'João Silva' }
+    ],
+    mensagens: [
+      {
+        id: '1',
+        remetente: { id: 'user2', nome: 'João Silva' },
+        conteudo: 'Olá! Tudo bem?',
+        tipo: 'texto',
+        data: new Date(Date.now() - 1000 * 60 * 60), // 1 hora atrás
+        lida: true
+      },
+      {
+        id: '2',
+        remetente: { id: 'user1', nome: 'Você' },
+        conteudo: 'Oi João! Tudo bem e você?',
+        tipo: 'texto',
+        data: new Date(Date.now() - 1000 * 60 * 30), // 30 minutos atrás
+        lida: true
+      },
+      {
+        id: '3',
+        remetente: { id: 'user2', nome: 'João Silva' },
+        conteudo: 'Estou bem! Preparado para o evento de amanhã?',
+        tipo: 'texto',
+        data: new Date(Date.now() - 1000 * 60 * 5), // 5 minutos atrás
+        lida: false
+      }
+    ]
+  },
+  {
+    id: '2',
+    tipo: 'grupo',
+    nome: 'Equipe Evento Adão e Eva',
+    participantes: [
+      { id: 'user1', nome: 'Você' },
+      { id: 'user2', nome: 'João Silva' },
+      { id: 'user3', nome: 'Maria Oliveira' }
+    ],
+    mensagens: [
+      {
+        id: '4',
+        remetente: { id: 'user3', nome: 'Maria Oliveira' },
+        conteudo: 'Pessoal, alguém pode me ajudar com a organização do evento?',
+        tipo: 'texto',
+        data: new Date(Date.now() - 1000 * 60 * 120), // 2 horas atrás
+        lida: true
+      },
+      {
+        id: '5',
+        remetente: { id: 'user2', nome: 'João Silva' },
+        conteudo: 'Claro! O que precisa?',
+        tipo: 'texto',
+        data: new Date(Date.now() - 1000 * 60 * 115), // 1h55min atrás
+        lida: true
+      }
+    ]
+  }
+];
 
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -38,6 +104,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         }))
       }));
       setChats(parsedChats);
+    } else {
+      // Se não houver chats salvos, usar os chats de exemplo
+      setChats(CHATS_EXEMPLO);
     }
   }, []);
 

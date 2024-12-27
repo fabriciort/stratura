@@ -1,13 +1,21 @@
 import { useState } from 'react';
 import { useChat } from '../../contexts/ChatContext';
+import { useWhatsapp } from '../../contexts/WhatsappContext';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
-import { MessageSquare, X, Send, Image, Paperclip } from 'lucide-react';
+import { MessageSquare, X, Send, Image, Paperclip, Phone, MessageCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Mensagem } from '../../types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { ScrollArea } from '../ui/scroll-area';
 
-export function ChatDrawer() {
+interface ChatDrawerProps {
+  onClose: () => void;
+}
+
+export function ChatDrawer({ onClose }: ChatDrawerProps) {
   const {
     chats,
     chatAtual,
@@ -15,12 +23,27 @@ export function ChatDrawer() {
     selecionarChat,
     enviarMensagem
   } = useChat();
-  const [isOpen, setIsOpen] = useState(false);
+  const { config, enviarMensagemWhatsapp } = useWhatsapp();
   const [mensagem, setMensagem] = useState('');
 
-  const handleEnviarMensagem = () => {
+  const handleEnviarMensagem = async () => {
     if (!mensagem.trim()) return;
+
+    // Enviar mensagem no chat interno
     enviarMensagem(mensagem, 'texto');
+
+    // Se o WhatsApp estiver habilitado e for um chat privado, enviar também por WhatsApp
+    if (config.enabled && chatAtual?.tipo === 'privado') {
+      const participante = chatAtual.participantes.find(p => p.id !== chatAtual.participantes[0].id);
+      if (participante) {
+        try {
+          await enviarMensagemWhatsapp(participante.id, mensagem);
+        } catch (error) {
+          console.error('Erro ao enviar mensagem WhatsApp:', error);
+        }
+      }
+    }
+
     setMensagem('');
   };
 
@@ -31,48 +54,101 @@ export function ChatDrawer() {
     }
   };
 
-  return (
-    <>
-      {/* Botão flutuante */}
-      <Button
-        className="fixed bottom-4 right-4 rounded-full p-4 shadow-lg"
-        onClick={() => setIsOpen(true)}
+  const renderMensagem = (mensagem: Mensagem) => {
+    const isRemetente = mensagem.remetente.id === chatAtual?.participantes[0].id;
+
+    return (
+      <div
+        key={mensagem.id}
+        className={`flex ${isRemetente ? 'justify-end' : 'justify-start'} mb-4`}
       >
-        <MessageSquare className="h-6 w-6" />
-        {mensagensNaoLidas > 0 && (
-          <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-red-500 text-xs font-medium text-white flex items-center justify-center">
-            {mensagensNaoLidas}
-          </span>
-        )}
-      </Button>
-
-      {/* Gaveta de chat */}
-      {isOpen && (
-        <div className="fixed inset-y-0 right-0 w-96 bg-background border-l shadow-xl flex flex-col z-50">
-          {/* Cabeçalho */}
-          <div className="p-4 border-b flex items-center justify-between">
-            <h3 className="font-semibold">Chat</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+        <div
+          className={`max-w-[80%] rounded-lg p-3 ${
+            isRemetente
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-muted'
+          }`}
+        >
+          <div className="flex items-center justify-between gap-2 mb-1">
+            <p className="text-sm font-medium">
+              {mensagem.remetente.nome}
+            </p>
+            {mensagem.tipo === 'whatsapp' && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Phone className="h-4 w-4" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Mensagem do WhatsApp</p>
+                    {mensagem.whatsappStatus && (
+                      <p className="text-xs opacity-70">
+                        Status: {mensagem.whatsappStatus}
+                      </p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
+          <p className="text-sm break-words">{mensagem.conteudo}</p>
+          <p className="text-xs opacity-70 mt-1">
+            {formatDistanceToNow(mensagem.data, {
+              addSuffix: true,
+              locale: ptBR
+            })}
+          </p>
+        </div>
+      </div>
+    );
+  };
 
-          {/* Lista de chats ou mensagens */}
-          <div className="flex-1 overflow-y-auto p-4">
-            {!chatAtual ? (
-              // Lista de chats
-              <div className="space-y-2">
-                {chats.map(chat => (
-                  <Card
-                    key={chat.id}
-                    className="p-3 cursor-pointer hover:bg-accent"
-                    onClick={() => selecionarChat(chat.id)}
-                  >
-                    <div className="flex items-center justify-between">
+  return (
+    <div className="fixed inset-y-0 right-0 w-full md:w-96 bg-background border-l shadow-xl flex flex-col z-50">
+      {/* Cabeçalho */}
+      <div className="p-4 border-b flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-5 w-5" />
+          <h3 className="font-semibold">Chat</h3>
+          {config.enabled && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Phone className="h-4 w-4 text-green-500" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>WhatsApp conectado</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Lista de chats ou mensagens */}
+      <ScrollArea className="flex-1">
+        <div className="p-4">
+          {!chatAtual ? (
+            // Lista de chats
+            <div className="space-y-2">
+              {chats.map(chat => (
+                <Card
+                  key={chat.id}
+                  className="p-3 cursor-pointer hover:bg-accent transition-colors"
+                  onClick={() => selecionarChat(chat.id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {chat.whatsappGroupId && (
+                        <Phone className="h-4 w-4 text-green-500" />
+                      )}
                       <div>
                         <p className="font-medium">
                           {chat.tipo === 'privado'
@@ -85,85 +161,57 @@ export function ChatDrawer() {
                           </p>
                         )}
                       </div>
-                      {chat.mensagens.filter(m => !m.lida).length > 0 && (
-                        <span className="h-2 w-2 rounded-full bg-blue-500" />
-                      )}
                     </div>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              // Mensagens do chat atual
-              <div className="space-y-4">
-                {chatAtual.mensagens.map(mensagem => (
-                  <div
-                    key={mensagem.id}
-                    className={`flex ${
-                      mensagem.remetente.id === chatAtual.participantes[0].id
-                        ? 'justify-end'
-                        : 'justify-start'
-                    }`}
-                  >
-                    <div
-                      className={`max-w-[80%] rounded-lg p-3 ${
-                        mensagem.remetente.id === chatAtual.participantes[0].id
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
-                      }`}
-                    >
-                      <p className="text-sm font-medium mb-1">
-                        {mensagem.remetente.nome}
-                      </p>
-                      <p className="text-sm">{mensagem.conteudo}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {formatDistanceToNow(mensagem.data, {
-                          addSuffix: true,
-                          locale: ptBR
-                        })}
-                      </p>
-                    </div>
+                    {chat.mensagens.filter(m => !m.lida).length > 0 && (
+                      <span className="h-2 w-2 rounded-full bg-blue-500" />
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Campo de entrada */}
-          {chatAtual && (
-            <div className="p-4 border-t">
-              <div className="flex items-center space-x-2">
-                <Input
-                  value={mensagem}
-                  onChange={e => setMensagem(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Digite sua mensagem..."
-                  className="flex-1"
-                />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {/* TODO: Implementar upload de imagem */}}
-                >
-                  <Image className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {/* TODO: Implementar upload de arquivo */}}
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
-                <Button
-                  onClick={handleEnviarMensagem}
-                  disabled={!mensagem.trim()}
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            // Mensagens do chat atual
+            <div className="space-y-4">
+              {chatAtual.mensagens.map(renderMensagem)}
             </div>
           )}
         </div>
+      </ScrollArea>
+
+      {/* Campo de entrada */}
+      {chatAtual && (
+        <div className="p-4 border-t">
+          <div className="flex items-center space-x-2">
+            <Input
+              value={mensagem}
+              onChange={e => setMensagem(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Digite sua mensagem..."
+              className="flex-1"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {/* TODO: Implementar upload de imagem */}}
+            >
+              <Image className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {/* TODO: Implementar upload de arquivo */}}
+            >
+              <Paperclip className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={handleEnviarMensagem}
+              disabled={!mensagem.trim()}
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       )}
-    </>
+    </div>
   );
 } 
