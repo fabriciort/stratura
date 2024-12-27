@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { Chat, Mensagem } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from './AuthContext';
+import { playMessageSentSound, playMessageReceivedSound } from '../lib/sounds';
+import { useApp } from './AppContext';
 
 interface ChatContextType {
   chats: Chat[];
@@ -87,6 +89,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [chatAtual, setChatAtual] = useState<Chat | null>(null);
   const { user } = useAuth();
+  const { pessoas } = useApp();
 
   // Carregar chats do localStorage ao iniciar
   useEffect(() => {
@@ -153,7 +156,25 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       chat.id === chatAtual.id ? chatAtualizado : chat
     ));
     setChatAtual(chatAtualizado);
+    playMessageSentSound();
   };
+
+  // Simular recebimento de mensagens (em um ambiente real, isso viria do backend)
+  useEffect(() => {
+    const handleNovaMensagem = (mensagem: Mensagem) => {
+      if (mensagem.remetente.id !== user?.id) {
+        playMessageReceivedSound();
+      }
+    };
+
+    // Observar novas mensagens em todos os chats
+    chats.forEach(chat => {
+      const ultimaMensagem = chat.mensagens[chat.mensagens.length - 1];
+      if (ultimaMensagem && !ultimaMensagem.lida && ultimaMensagem.remetente.id !== user?.id) {
+        handleNovaMensagem(ultimaMensagem);
+      }
+    });
+  }, [chats, user?.id]);
 
   const criarChatPrivado = (participanteId: string) => {
     if (!user) return;
@@ -169,6 +190,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Buscar os dados do participante
+    const participante = pessoas.find(p => String(p.id) === participanteId);
+    if (!participante) return;
+
     const novoChat: Chat = {
       id: uuidv4(),
       tipo: 'privado',
@@ -177,10 +202,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
           id: user.id,
           nome: user.name
         },
-        // Aqui você precisará buscar os dados do participante
         {
           id: participanteId,
-          nome: 'Nome do Participante' // Substituir pelo nome real
+          nome: participante.nome
         }
       ],
       mensagens: []

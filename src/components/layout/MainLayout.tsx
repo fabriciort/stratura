@@ -166,22 +166,6 @@ export function MainLayout({ children }: MainLayoutProps) {
         {children}
       </main>
 
-      {/* Botão flutuante do chat */}
-      <Button
-        variant="default"
-        size="lg"
-        className="fixed bottom-6 right-6 rounded-full p-4 shadow-lg z-50 flex items-center gap-2"
-        onClick={() => setChatOpen(true)}
-      >
-        <MessageCircle className="h-6 w-6" />
-        <span className="hidden md:inline">Chat</span>
-        {mensagensNaoLidas > 0 && (
-          <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-xs font-medium text-destructive-foreground flex items-center justify-center">
-            {mensagensNaoLidas}
-          </span>
-        )}
-      </Button>
-
       {/* Chat Drawer */}
       {chatOpen && <ChatDrawer onClose={() => setChatOpen(false)} />}
     </div>

@@ -375,6 +375,10 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
     );
   };
 
+  const handleVoltar = () => {
+    selecionarChat('');
+  };
+
   return (
     <AnimatePresence>
       <motion.div
@@ -388,17 +392,15 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
         <div className="p-4 border-b flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              {chatAtual ? (
+              {chatAtual && (
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => selecionarChat('')}
-                  className="hover:bg-accent"
+                  onClick={handleVoltar}
+                  className="mr-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
-              ) : (
-                <MessageSquare className="h-5 w-5" />
               )}
               <h3 className="font-semibold">{getChatTitle()}</h3>
               {config.enabled && (
