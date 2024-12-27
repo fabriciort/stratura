@@ -123,6 +123,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, 0);
 
   const selecionarChat = (chatId: string) => {
+    if (!chatId) {
+      setChatAtual(null);
+      return;
+    }
+    
     const chat = chats.find(c => c.id === chatId);
     if (chat) {
       setChatAtual(chat);

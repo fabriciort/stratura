@@ -146,21 +146,21 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl">
+      <div className="grid grid-cols-3 gap-4 w-full max-w-2xl">
         <motion.div
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
-                <MessageCircle className="h-6 w-6" />
-                <span>Novo Chat</span>
+              <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                <span className="text-sm">Privado</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Novo Chat</DialogTitle>
+                <DialogTitle>Chat Privado</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4">
                 {pessoas.map(pessoa => (
@@ -185,9 +185,9 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
         >
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
-                <Users className="h-6 w-6" />
-                <span>Novo Grupo</span>
+              <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2">
+                <Users className="h-5 w-5" />
+                <span className="text-sm">Grupo</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -222,7 +222,7 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
                 </div>
                 <Button onClick={handleCriarGrupo} disabled={!novoGrupoNome || participantesSelecionados.length === 0}>
                   Criar Grupo
-      </Button>
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -234,9 +234,9 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
         >
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
-                <Calendar className="h-6 w-6" />
-                <span>Chat de Evento</span>
+              <Button variant="outline" className="w-full h-20 flex flex-col items-center justify-center gap-2">
+                <Calendar className="h-5 w-5" />
+                <span className="text-sm">Evento</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -245,15 +245,15 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
               </DialogHeader>
               <div className="grid gap-4">
                 {eventos.map(evento => (
-            <Button
+                  <Button
                     key={evento.id}
-              variant="ghost"
+                    variant="ghost"
                     className="w-full justify-start"
                     onClick={() => criarChatEvento(String(evento.id))}
-            >
+                  >
                     <Calendar className="h-4 w-4 mr-2" />
                     {evento.nome}
-            </Button>
+                  </Button>
                 ))}
               </div>
             </DialogContent>
@@ -395,15 +395,15 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
               {chatAtual && (
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   onClick={handleVoltar}
-                  className="mr-2"
+                  className="hover:bg-accent"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               )}
               <h3 className="font-semibold">{getChatTitle()}</h3>
-              {config.enabled && (
+              {config.enabled && chatAtual?.tipo === 'privado' && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger>
@@ -418,7 +418,7 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
             </div>
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={onClose}
             >
               <X className="h-4 w-4" />
@@ -427,7 +427,7 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
           {chatAtual && (
             <p className="text-sm text-muted-foreground">{getChatInfo()}</p>
           )}
-                  </div>
+        </div>
 
         {/* Conteúdo */}
         <ScrollArea className="flex-1" ref={scrollRef}>
