@@ -10,6 +10,7 @@ import { useToast } from '../../hooks/use-toast';
 import { cn } from '../../lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 import { Input } from '../ui/input';
+import { DialogHeader, DialogTitle } from '../ui/dialog';
 
 interface EventoFormProps {
   evento?: Evento;
@@ -150,18 +151,18 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-[80vh]">
-      <div className="flex items-center justify-between pb-4 border-b">
-        <div className="flex items-center space-x-2">
-          <Calendar className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-semibold">
-            {evento ? 'Editar Evento' : 'Novo Evento'}
-          </h2>
-        </div>
-      </div>
+    <div className="flex flex-col h-[calc(100vh-8rem)]">
+      <DialogHeader>
+        <DialogTitle>
+          <div className="flex items-center space-x-2">
+            <Calendar className="h-5 w-5 text-primary" />
+            <span>{evento ? 'Editar Evento' : 'Novo Evento'}</span>
+          </div>
+        </DialogTitle>
+      </DialogHeader>
 
-      <ScrollArea className="flex-1 px-1">
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
+      <ScrollArea className="flex-1 px-1 -mx-6">
+        <form onSubmit={handleSubmit} className="space-y-6 py-4 px-6">
           <div className="grid gap-6">
             {/* Informações Básicas */}
             <Card>
