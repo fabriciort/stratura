@@ -12,9 +12,10 @@ interface EventoDetailsProps {
   evento: Evento;
   onEdit: () => void;
   onAddEscala: () => void;
+  onGerenciarPessoas: () => void;
 }
 
-export function EventoDetails({ evento, onEdit, onAddEscala }: EventoDetailsProps) {
+export function EventoDetails({ evento, onEdit, onAddEscala, onGerenciarPessoas }: EventoDetailsProps) {
   const { updateEvento } = useApp();
   const { toast } = useToast();
 
@@ -81,6 +82,9 @@ export function EventoDetails({ evento, onEdit, onAddEscala }: EventoDetailsProp
             </CardTitle>
             <div className="flex items-center space-x-4">
               <StatusIndicator status={evento.status} />
+              <Button variant="outline" size="sm" onClick={onGerenciarPessoas}>
+                Gerenciar Pessoas
+              </Button>
               <Button variant="outline" size="sm" onClick={onEdit}>
                 Editar
               </Button>
@@ -220,6 +224,29 @@ export function EventoDetails({ evento, onEdit, onAddEscala }: EventoDetailsProp
               </Button>
             </div>
           )}
+
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold mb-4 flex items-center">
+              <Users className="h-5 w-5 mr-2" />
+              Pessoas Escaladas
+            </h3>
+            {evento.pessoasEscaladas && evento.pessoasEscaladas.length > 0 ? (
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                {evento.pessoasEscaladas.map((pessoa) => (
+                  <Card key={pessoa.id} className="p-4">
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-1">
+                        <p className="font-medium">{pessoa.nome}</p>
+                        <p className="text-sm text-muted-foreground">{pessoa.funcao}</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground">Nenhuma pessoa escalada ainda.</p>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

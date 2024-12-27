@@ -4,6 +4,7 @@ import { useApp } from '../../contexts/AppContext';
 import { EventoForm } from '../../components/eventos/EventoForm';
 import { EventosList } from '../../components/eventos/EventosList';
 import { EventoDetails } from '../../components/eventos/EventoDetails';
+import { GerenciarPessoas } from '../../components/eventos/GerenciarPessoas';
 import { Button } from '../../components/ui/button';
 import { Plus } from 'lucide-react';
 import { Evento } from '../../types';
@@ -17,12 +18,13 @@ export function EventosPage({ isNew }: EventosPageProps) {
   const { id } = useParams();
   const { eventos } = useApp();
   const [showForm, setShowForm] = useState(false);
-  const [selectedEvento, setSelectedEvento] = useState<Evento | null>(null);
+  const [showGerenciarPessoas, setShowGerenciarPessoas] = useState(false);
+  const [selectedEvento, setSelectedEvento] = useState<Evento | undefined>();
 
   useEffect(() => {
     if (isNew) {
       setShowForm(true);
-      setSelectedEvento(null);
+      setSelectedEvento(undefined);
     } else if (id) {
       const evento = eventos.find(e => e.id === Number(id));
       if (evento) {
@@ -40,14 +42,18 @@ export function EventosPage({ isNew }: EventosPageProps) {
 
   const handleClose = () => {
     setShowForm(false);
-    setSelectedEvento(null);
+    setSelectedEvento(undefined);
     navigate('/eventos');
   };
 
   const handleAddEscala = () => {
     if (selectedEvento) {
-      navigate(`/escalas/novo?eventoId=${selectedEvento.id}`);
+      navigate(`/escalas?eventoId=${selectedEvento.id}`);
     }
+  };
+
+  const handleGerenciarPessoas = () => {
+    setShowGerenciarPessoas(true);
   };
 
   if (showForm) {
@@ -56,11 +62,19 @@ export function EventosPage({ isNew }: EventosPageProps) {
 
   if (selectedEvento && !showForm) {
     return (
-      <EventoDetails
-        evento={selectedEvento}
-        onEdit={() => setShowForm(true)}
-        onAddEscala={handleAddEscala}
-      />
+      <>
+        <EventoDetails
+          evento={selectedEvento}
+          onEdit={() => setShowForm(true)}
+          onAddEscala={handleAddEscala}
+          onGerenciarPessoas={handleGerenciarPessoas}
+        />
+        <GerenciarPessoas
+          evento={selectedEvento}
+          isOpen={showGerenciarPessoas}
+          onClose={() => setShowGerenciarPessoas(false)}
+        />
+      </>
     );
   }
 

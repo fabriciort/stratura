@@ -1,22 +1,44 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../../contexts/AppContext';
 import { Button } from '../ui/button';
-import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card';
-import { Evento, ItemCardapio } from '../../types';
-import { Calendar, Clock, MapPin, Users, Beer, Camera } from 'lucide-react';
-import { Checkbox } from '../ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { Evento } from '../../types';
+import { Calendar, Beer, Camera } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useToast } from '../../hooks/use-toast';
+import { cn } from '../../lib/utils';
+import { ScrollArea } from '../ui/scroll-area';
+import { Input } from '../ui/input';
 
 interface EventoFormProps {
   evento?: Evento;
   onClose: () => void;
 }
 
+const TIPOS_EVENTO = [
+  'Casamento',
+  'Aniversário',
+  'Corporativo',
+  'Formatura',
+  'Confraternização',
+  'Outro'
+] as const;
+
+const TIPOS_BEBIDA = [
+  'cerveja',
+  'chopp',
+  'drinks',
+  'refrigerante',
+  'agua'
+] as const;
+
+type TipoBebida = typeof TIPOS_BEBIDA[number];
+
 export function EventoForm({ evento, onClose }: EventoFormProps) {
   const { addEvento, updateEvento } = useApp();
-  const [formData, setFormData] = useState({
+  const { toast } = useToast();
+  const [formData, setFormData] = useState<Omit<Evento, 'id' | 'createdAt' | 'updatedAt'>>({
     nome: '',
     data: '',
     horarioInicio: '',
@@ -27,29 +49,45 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
     caracteristicas: {
       cardapio: {
         nome: '',
-        itens: [] as ItemCardapio[]
+        itens: []
       },
       temBebidas: false,
-      tipoBebidas: [] as ('cerveja' | 'chopp' | 'drinks' | 'refrigerante' | 'agua')[],
+      tipoBebidas: [] as TipoBebida[],
       temCabineFoto: false,
-      tipoCabineFoto: undefined as 'propria' | 'externa' | undefined,
-      outrasCaracteristicas: [] as string[]
+      tipoCabineFoto: undefined,
+      outrasCaracteristicas: []
     },
-    observacoes: ''
+    observacoes: '',
+    status: 'pendente',
+    progresso: {
+      escalaCompleta: false,
+      equipePronta: false,
+      materiaisPreparados: false,
+      checklistConcluido: false,
+      emAndamento: false,
+      finalizado: false
+    }
   });
 
   useEffect(() => {
     if (evento) {
       setFormData({
-        ...evento,
-        data: new Date(evento.data).toISOString().split('T')[0],
+        nome: evento.nome,
+        data: evento.data,
+        horarioInicio: evento.horarioInicio,
+        horarioFim: evento.horarioFim,
+        local: evento.local,
+        tipo: evento.tipo,
+        quantidadePessoas: evento.quantidadePessoas,
         caracteristicas: {
           ...evento.caracteristicas,
           cardapio: evento.caracteristicas.cardapio || { nome: '', itens: [] },
           tipoBebidas: evento.caracteristicas.tipoBebidas || [],
           outrasCaracteristicas: evento.caracteristicas.outrasCaracteristicas || []
         },
-        observacoes: evento.observacoes || ''
+        observacoes: evento.observacoes || '',
+        status: evento.status,
+        progresso: evento.progresso
       });
     }
   }, [evento]);
@@ -57,82 +95,49 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.nome || !formData.data || !formData.horarioInicio || !formData.horarioFim || !formData.local || !formData.tipo) {
+      toast({
+        title: "Erro",
+        description: "Preencha todos os campos obrigatórios",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     try {
-      const eventoData = {
-        ...formData,
-        data: formData.data,
-        quantidadePessoas: Number(formData.quantidadePessoas),
-        status: evento?.status || 'pendente',
-        progresso: evento?.progresso || {
-          escalaCompleta: false,
-          equipePronta: false,
-          materiaisPreparados: false,
-          checklistConcluido: false,
-          emAndamento: false,
-          finalizado: false
-        },
-        caracteristicas: {
-          ...formData.caracteristicas,
-          cardapio: {
-            ...formData.caracteristicas.cardapio,
-            itens: formData.caracteristicas.cardapio.itens || []
-          }
-        }
-      };
-      
       if (evento) {
         await updateEvento(evento.id, {
-          ...eventoData,
-          status: evento.status,
+          ...formData,
           updatedAt: new Date()
+        });
+        toast({
+          title: "Sucesso",
+          description: "Evento atualizado com sucesso",
+          variant: "success",
         });
       } else {
         await addEvento({
-          ...eventoData,
-          status: 'pendente',
+          ...formData,
           createdAt: new Date(),
           updatedAt: new Date()
         });
+        toast({
+          title: "Sucesso",
+          description: "Evento criado com sucesso",
+          variant: "success",
+        });
       }
-      
       onClose();
     } catch (error) {
-      console.error('Erro ao salvar evento:', error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao salvar",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleChange = (field: string, value: any) => {
-    const fields = field.split('.');
-    if (fields.length === 1) {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        caracteristicas: {
-          ...prev.caracteristicas,
-          [fields[1]]: value
-        }
-      }));
-    }
-  };
-
-  const handleCardapioChange = (field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      caracteristicas: {
-        ...prev.caracteristicas,
-        cardapio: {
-          ...prev.caracteristicas.cardapio,
-          [field]: value
-        }
-      }
-    }));
-  };
-
-  const handleTipoBebidaChange = (tipo: 'cerveja' | 'chopp' | 'drinks' | 'refrigerante' | 'agua') => {
+  const toggleTipoBebida = (tipo: TipoBebida) => {
     setFormData(prev => ({
       ...prev,
       caracteristicas: {
@@ -145,211 +150,223 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Calendar className="h-5 w-5" />
-          <span>{evento ? 'Editar' : 'Novo'} Evento</span>
-        </CardTitle>
-      </CardHeader>
-      <form onSubmit={handleSubmit}>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="nome">Nome do Evento</Label>
-              <Input
-                id="nome"
-                value={formData.nome}
-                onChange={(e) => handleChange('nome', e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="tipo">Tipo do Evento</Label>
-              <Input
-                id="tipo"
-                value={formData.tipo}
-                onChange={(e) => handleChange('tipo', e.target.value)}
-                required
-              />
-            </div>
-          </div>
+    <div className="flex flex-col h-full max-h-[80vh]">
+      <div className="flex items-center justify-between pb-4 border-b">
+        <div className="flex items-center space-x-2">
+          <Calendar className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold">
+            {evento ? 'Editar Evento' : 'Novo Evento'}
+          </h2>
+        </div>
+      </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="data">Data</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="data"
-                  type="date"
-                  value={formData.data}
-                  onChange={(e) => handleChange('data', e.target.value)}
-                  className="pl-9"
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="horarioInicio">Horário de Início</Label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="horarioInicio"
-                  type="time"
-                  value={formData.horarioInicio}
-                  onChange={(e) => handleChange('horarioInicio', e.target.value)}
-                  className="pl-9"
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="horarioFim">Horário de Término</Label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="horarioFim"
-                  type="time"
-                  value={formData.horarioFim}
-                  onChange={(e) => handleChange('horarioFim', e.target.value)}
-                  className="pl-9"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="local">Local</Label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="local"
-                  value={formData.local}
-                  onChange={(e) => handleChange('local', e.target.value)}
-                  className="pl-9"
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quantidadePessoas">Quantidade de Pessoas</Label>
-              <div className="relative">
-                <Users className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="quantidadePessoas"
-                  type="number"
-                  min="1"
-                  value={formData.quantidadePessoas}
-                  onChange={(e) => handleChange('quantidadePessoas', e.target.value)}
-                  className="pl-9"
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4 border-t pt-4">
-            <h3 className="font-medium">Características do Evento</h3>
-            
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Cardápio</Label>
-                <Input
-                  placeholder="Nome do Cardápio"
-                  value={formData.caracteristicas.cardapio.nome}
-                  onChange={(e) => handleCardapioChange('nome', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="temBebidas"
-                    checked={formData.caracteristicas.temBebidas}
-                    onCheckedChange={(checked) => handleChange('caracteristicas.temBebidas', checked)}
-                  />
-                  <Label htmlFor="temBebidas" className="flex items-center space-x-2">
-                    <Beer className="h-4 w-4" />
-                    <span>Serviço de Bebidas</span>
-                  </Label>
-                </div>
-
-                {formData.caracteristicas.temBebidas && (
-                  <div className="ml-6 mt-2 space-y-2">
-                    <Label>Tipos de Bebidas</Label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['cerveja', 'chopp', 'drinks', 'refrigerante', 'agua'].map((tipo) => (
-                        <div key={tipo} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`bebida-${tipo}`}
-                            checked={formData.caracteristicas.tipoBebidas.includes(tipo as any)}
-                            onCheckedChange={() => handleTipoBebidaChange(tipo as any)}
-                          />
-                          <Label htmlFor={`bebida-${tipo}`}>{tipo.charAt(0).toUpperCase() + tipo.slice(1)}</Label>
-                        </div>
-                      ))}
+      <ScrollArea className="flex-1 px-1">
+        <form onSubmit={handleSubmit} className="space-y-6 py-4">
+          <div className="grid gap-6">
+            {/* Informações Básicas */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Informações Básicas</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Nome do Evento</Label>
+                    <Input
+                      value={formData.nome}
+                      onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
+                      placeholder="Nome do evento"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tipo do Evento</Label>
+                    <Select 
+                      value={formData.tipo}
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, tipo: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIPOS_EVENTO.map((tipo) => (
+                          <SelectItem key={tipo} value={tipo.toLowerCase()}>
+                            {tipo}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Data</Label>
+                    <Input
+                      type="date"
+                      value={formData.data}
+                      onChange={(e) => setFormData(prev => ({ ...prev, data: e.target.value }))}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Início</Label>
+                      <Input
+                        type="time"
+                        value={formData.horarioInicio}
+                        onChange={(e) => setFormData(prev => ({ ...prev, horarioInicio: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Término</Label>
+                      <Input
+                        type="time"
+                        value={formData.horarioFim}
+                        onChange={(e) => setFormData(prev => ({ ...prev, horarioFim: e.target.value }))}
+                      />
                     </div>
                   </div>
-                )}
-              </div>
+                  <div className="space-y-2">
+                    <Label>Local</Label>
+                    <Input
+                      value={formData.local}
+                      onChange={(e) => setFormData(prev => ({ ...prev, local: e.target.value }))}
+                      placeholder="Endereço do evento"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Quantidade de Pessoas</Label>
+                    <Input
+                      type="number"
+                      value={formData.quantidadePessoas}
+                      onChange={(e) => setFormData(prev => ({ ...prev, quantidadePessoas: parseInt(e.target.value) || 0 }))}
+                      min={0}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="temCabineFoto"
-                    checked={formData.caracteristicas.temCabineFoto}
-                    onCheckedChange={(checked) => handleChange('caracteristicas.temCabineFoto', checked)}
-                  />
-                  <Label htmlFor="temCabineFoto" className="flex items-center space-x-2">
-                    <Camera className="h-4 w-4" />
-                    <span>Cabine de Foto</span>
-                  </Label>
+            {/* Características */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Características do Evento</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <Label>Bebidas</Label>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      type="button"
+                      variant={formData.caracteristicas.temBebidas ? "default" : "outline"}
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        caracteristicas: {
+                          ...prev.caracteristicas,
+                          temBebidas: !prev.caracteristicas.temBebidas
+                        }
+                      }))}
+                    >
+                      <Beer className="h-4 w-4 mr-2" />
+                      {formData.caracteristicas.temBebidas ? "Tem Bebidas" : "Sem Bebidas"}
+                    </Button>
+                  </div>
+                  
+                  {formData.caracteristicas.temBebidas && (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                      {TIPOS_BEBIDA.map((tipo) => (
+                        <Button
+                          key={tipo}
+                          type="button"
+                          variant={formData.caracteristicas.tipoBebidas.includes(tipo) ? "default" : "outline"}
+                          onClick={() => toggleTipoBebida(tipo)}
+                          className="justify-start"
+                        >
+                          <Beer className="h-4 w-4 mr-2" />
+                          {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                        </Button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {formData.caracteristicas.temCabineFoto && (
-                  <div className="ml-6 mt-2 space-y-2">
-                    <Label>Tipo de Cabine</Label>
-                    <RadioGroup
-                      value={formData.caracteristicas.tipoCabineFoto}
-                      onValueChange={(value) => handleChange('caracteristicas.tipoCabineFoto', value)}
+                <div className="space-y-4">
+                  <Label>Cabine de Foto</Label>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      type="button"
+                      variant={formData.caracteristicas.temCabineFoto ? "default" : "outline"}
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        caracteristicas: {
+                          ...prev.caracteristicas,
+                          temCabineFoto: !prev.caracteristicas.temCabineFoto
+                        }
+                      }))}
                     >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="propria" id="cabine-propria" />
-                        <Label htmlFor="cabine-propria">Própria</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="externa" id="cabine-externa" />
-                        <Label htmlFor="cabine-externa">Externa</Label>
-                      </div>
-                    </RadioGroup>
+                      <Camera className="h-4 w-4 mr-2" />
+                      {formData.caracteristicas.temCabineFoto ? "Tem Cabine" : "Sem Cabine"}
+                    </Button>
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="observacoes">Observações</Label>
-            <textarea
-              id="observacoes"
-              className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              value={formData.observacoes}
-              onChange={(e) => handleChange('observacoes', e.target.value)}
-            />
+                  {formData.caracteristicas.temCabineFoto && (
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <Button
+                        type="button"
+                        variant={formData.caracteristicas.tipoCabineFoto === 'propria' ? "default" : "outline"}
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          caracteristicas: {
+                            ...prev.caracteristicas,
+                            tipoCabineFoto: 'propria'
+                          }
+                        }))}
+                      >
+                        Própria
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={formData.caracteristicas.tipoCabineFoto === 'externa' ? "default" : "outline"}
+                        onClick={() => setFormData(prev => ({
+                          ...prev,
+                          caracteristicas: {
+                            ...prev.caracteristicas,
+                            tipoCabineFoto: 'externa'
+                          }
+                        }))}
+                      >
+                        Externa
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Observações */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Observações</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <textarea
+                  value={formData.observacoes}
+                  onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
+                  placeholder="Adicione observações sobre o evento..."
+                  className={cn(
+                    "flex min-h-[100px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  )}
+                />
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button type="submit">
-            {evento ? 'Salvar' : 'Criar'} Evento
-          </Button>
-        </CardFooter>
-      </form>
-    </Card>
+        </form>
+      </ScrollArea>
+
+      <div className="flex justify-end space-x-4 pt-4 border-t mt-4">
+        <Button type="button" variant="outline" onClick={onClose}>
+          Cancelar
+        </Button>
+        <Button onClick={handleSubmit}>
+          {evento ? 'Atualizar' : 'Criar'}
+        </Button>
+      </div>
+    </div>
   );
 } 

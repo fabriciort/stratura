@@ -7,7 +7,8 @@ import { Label } from '../ui/label';
 import { Escala } from '../../types';
 import { ClipboardList, Search, Filter, Calendar, Clock, Users, Edit2, Trash2, AlertCircle } from 'lucide-react';
 import { LoadingList } from '../ui/loading-list';
-import { useToast } from '../../hooks/useToast';
+import { useToast } from '../../hooks/use-toast';
+import { cn } from '../../lib/utils';
 
 interface EscalasListProps {
   onEdit: (escala: Escala) => void;
@@ -29,7 +30,7 @@ export function EscalasList({ onEdit }: EscalasListProps) {
     if (window.confirm(`Tem certeza que deseja excluir a escala do evento "${evento.nome}"?`)) {
       try {
         setLoading(true);
-        deleteEscala(escala.id);
+        await deleteEscala(escala.id);
         toast({
           title: "Escala excluída",
           description: `A escala do evento "${evento.nome}" foi removida com sucesso.`,
@@ -47,11 +48,11 @@ export function EscalasList({ onEdit }: EscalasListProps) {
     }
   };
 
-  const getEvento = (eventoId: string) => {
+  const getEvento = (eventoId: number) => {
     return eventos.find(e => e.id === eventoId);
   };
 
-  const getPessoaNome = (pessoaId: string) => {
+  const getPessoaNome = (pessoaId: number) => {
     const pessoa = pessoas.find(p => p.id === pessoaId);
     return pessoa ? pessoa.nome : 'Pessoa não encontrada';
   };
@@ -80,7 +81,7 @@ export function EscalasList({ onEdit }: EscalasListProps) {
       const eventoA = getEvento(a.eventoId);
       const eventoB = getEvento(b.eventoId);
       if (!eventoA || !eventoB) return 0;
-      return new Date(eventoA.data).getTime() - new Date(eventoB.data).getTime();
+      return new Date(eventoB.data).getTime() - new Date(eventoA.data).getTime();
     });
 
   if (loading) {
@@ -104,104 +105,89 @@ export function EscalasList({ onEdit }: EscalasListProps) {
           </div>
         </div>
         <div className="w-full sm:w-48">
-          <Label htmlFor="status">Filtrar por Status</Label>
-          <div className="relative">
-            <Filter className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-            <select
-              id="status"
-              value={statusFiltro}
-              onChange={(e) => setStatusFiltro(e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-background pl-9 pr-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              {STATUS.map((status) => (
-                <option key={status} value={status}>{status}</option>
-              ))}
-            </select>
-          </div>
+          <Label htmlFor="status">Status</Label>
+          <select
+            id="status"
+            value={statusFiltro}
+            onChange={(e) => setStatusFiltro(e.target.value)}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            {STATUS.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {filteredEscalas.length === 0 ? (
-        <Card className="p-8 text-center">
-          <div className="flex flex-col items-center gap-2">
-            <ClipboardList className="h-8 w-8 text-muted-foreground" />
-            <h3 className="font-semibold">Nenhuma escala encontrada</h3>
-            <p className="text-sm text-muted-foreground">
-              {searchTerm || statusFiltro !== 'Todos'
-                ? "Tente ajustar os filtros de busca"
-                : "Comece criando uma nova escala"}
-            </p>
-          </div>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredEscalas.map((escala) => {
+      <div className="grid gap-4">
+        {filteredEscalas.length > 0 ? (
+          filteredEscalas.map((escala) => {
             const evento = getEvento(escala.eventoId);
             if (!evento) return null;
 
             return (
-              <Card key={escala.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <ClipboardList className="h-5 w-5 text-primary" />
+              <Card key={escala.id} className="overflow-hidden">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center space-x-2">
+                      <Calendar className="h-5 w-5 text-primary" />
                       <span>{evento.nome}</span>
-                    </div>
+                    </CardTitle>
                     <div className="flex items-center space-x-2">
-                      <span className={`text-sm flex items-center ${getStatusColor(escala.status)}`}>
-                        <AlertCircle className="h-4 w-4 mr-1" />
+                      <span className={cn("text-sm font-medium", getStatusColor(escala.status))}>
                         {escala.status.charAt(0).toUpperCase() + escala.status.slice(1)}
                       </span>
                       <Button
                         variant="ghost"
-                        size="icon"
+                        size="sm"
                         onClick={() => onEdit(escala)}
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
-                        size="icon"
+                        size="sm"
                         onClick={() => handleDelete(escala)}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
-                  </CardTitle>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm">
-                      <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                      {new Date(evento.data).toLocaleDateString('pt-BR')}
-                    </div>
+                  <div className="space-y-2">
                     <div className="flex items-center text-sm">
                       <Clock className="h-4 w-4 mr-2 text-muted-foreground" />
-                      {evento.horarioInicio} às {evento.horarioFim}
+                      {new Date(evento.data).toLocaleDateString('pt-BR')} - {evento.horarioInicio} às {evento.horarioFim}
                     </div>
                     <div className="flex items-center text-sm">
                       <Users className="h-4 w-4 mr-2 text-muted-foreground" />
                       {escala.pessoas.length} pessoas escaladas
                     </div>
-                    <div className="space-y-1 pt-2 border-t">
-                      {escala.pessoas.slice(0, 3).map((pessoa, index) => (
-                        <div key={index} className="text-sm text-muted-foreground">
-                          • {getPessoaNome(pessoa.pessoaId)} - {pessoa.funcao}
-                        </div>
-                      ))}
-                      {escala.pessoas.length > 3 && (
-                        <div className="text-sm text-muted-foreground">
-                          + {escala.pessoas.length - 3} pessoas
-                        </div>
-                      )}
-                    </div>
+                    {escala.pessoas.length > 0 && (
+                      <div className="mt-4 space-y-2">
+                        {escala.pessoas.map((pessoa, index) => (
+                          <div key={index} className="flex items-center justify-between text-sm">
+                            <span>{getPessoaNome(pessoa.pessoaId)}</span>
+                            <span className="text-muted-foreground">{pessoa.funcao}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
             );
-          })}
-        </div>
-      )}
+          })
+        ) : (
+          <div className="text-center py-8">
+            <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground">Nenhuma escala encontrada</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 } 

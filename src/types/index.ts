@@ -14,6 +14,13 @@ export interface Pessoa {
   updatedAt: Date;
 }
 
+export interface PessoaEscalada {
+  id: number;
+  nome: string;
+  funcao: string;
+  confirmado: boolean;
+}
+
 export interface Evento {
   id: number;
   nome: string;
@@ -44,6 +51,7 @@ export interface Evento {
     emAndamento: boolean;
     finalizado: boolean;
   };
+  pessoasEscaladas?: PessoaEscalada[];
   escala?: Escala;
   createdAt: Date;
   updatedAt: Date;
