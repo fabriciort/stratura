@@ -166,23 +166,23 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
           <div className="grid gap-6">
             {/* Informações Básicas */}
             <Card>
-              <CardHeader>
+      <CardHeader>
                 <CardTitle className="text-base">Informações Básicas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+      </CardHeader>
+        <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
+            <div className="space-y-2">
                     <Label>Nome do Evento</Label>
-                    <Input
-                      value={formData.nome}
+              <Input
+                value={formData.nome}
                       onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                       placeholder="Nome do evento"
-                    />
-                  </div>
-                  <div className="space-y-2">
+              />
+            </div>
+            <div className="space-y-2">
                     <Label>Tipo do Evento</Label>
                     <Select 
-                      value={formData.tipo}
+                value={formData.tipo}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, tipo: value }))}
                     >
                       <SelectTrigger>
@@ -196,51 +196,51 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="space-y-2">
+          </div>
+            <div className="space-y-2">
                     <Label>Data</Label>
-                    <Input
-                      type="date"
-                      value={formData.data}
+                <Input
+                  type="date"
+                  value={formData.data}
                       onChange={(e) => setFormData(prev => ({ ...prev, data: e.target.value }))}
-                    />
-                  </div>
+                />
+              </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
+            <div className="space-y-2">
                       <Label>Início</Label>
-                      <Input
-                        type="time"
-                        value={formData.horarioInicio}
+                <Input
+                  type="time"
+                  value={formData.horarioInicio}
                         onChange={(e) => setFormData(prev => ({ ...prev, horarioInicio: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
+                />
+            </div>
+            <div className="space-y-2">
                       <Label>Término</Label>
-                      <Input
-                        type="time"
-                        value={formData.horarioFim}
+                <Input
+                  type="time"
+                  value={formData.horarioFim}
                         onChange={(e) => setFormData(prev => ({ ...prev, horarioFim: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
                     <Label>Local</Label>
-                    <Input
-                      value={formData.local}
+                <Input
+                  value={formData.local}
                       onChange={(e) => setFormData(prev => ({ ...prev, local: e.target.value }))}
                       placeholder="Endereço do evento"
-                    />
-                  </div>
-                  <div className="space-y-2">
+                />
+            </div>
+            <div className="space-y-2">
                     <Label>Quantidade de Pessoas</Label>
-                    <Input
-                      type="number"
-                      value={formData.quantidadePessoas}
+                <Input
+                  type="number"
+                  value={formData.quantidadePessoas}
                       onChange={(e) => setFormData(prev => ({ ...prev, quantidadePessoas: parseInt(e.target.value) || 0 }))}
                       min={0}
-                    />
-                  </div>
-                </div>
+                />
+              </div>
+            </div>
               </CardContent>
             </Card>
 
@@ -250,9 +250,9 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
                 <CardTitle className="text-base">Características do Evento</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="space-y-4">
+            <div className="space-y-4">
                   <Label>Bebidas</Label>
-                  <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2">
                     <Button
                       type="button"
                       variant={formData.caracteristicas.temBebidas ? "default" : "outline"}
@@ -267,9 +267,9 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
                       <Beer className="h-4 w-4 mr-2" />
                       {formData.caracteristicas.temBebidas ? "Tem Bebidas" : "Sem Bebidas"}
                     </Button>
-                  </div>
-                  
-                  {formData.caracteristicas.temBebidas && (
+                </div>
+
+                {formData.caracteristicas.temBebidas && (
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
                       {TIPOS_BEBIDA.map((tipo) => (
                         <Button
@@ -283,8 +283,8 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
                           {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
                         </Button>
                       ))}
-                    </div>
-                  )}
+                  </div>
+                )}
                 </div>
 
                 <div className="space-y-4">
@@ -334,9 +334,9 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
                       >
                         Externa
                       </Button>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
+              </div>
               </CardContent>
             </Card>
 
@@ -346,8 +346,8 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
                 <CardTitle className="text-base">Observações</CardTitle>
               </CardHeader>
               <CardContent>
-                <textarea
-                  value={formData.observacoes}
+            <textarea
+              value={formData.observacoes}
                   onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
                   placeholder="Adicione observações sobre o evento..."
                   className={cn(
@@ -361,12 +361,12 @@ export function EventoForm({ evento, onClose }: EventoFormProps) {
       </ScrollArea>
 
       <div className="flex justify-end space-x-4 pt-4 border-t mt-4">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancelar
-        </Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
         <Button onClick={handleSubmit}>
           {evento ? 'Atualizar' : 'Criar'}
-        </Button>
+          </Button>
       </div>
     </div>
   );

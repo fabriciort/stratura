@@ -5,7 +5,7 @@ import { useApp } from '../../contexts/AppContext';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
-import { MessageSquare, X, Send, Image, Paperclip, Phone, MessageCircle, Plus, Users, Calendar, ArrowLeft } from 'lucide-react';
+import { MessageSquare, X, Send, Image, Paperclip, Phone, MessageCircle, Plus, Users, Calendar, ArrowLeft, Search } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Mensagem } from '../../types';
@@ -13,6 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { ScrollArea } from '../ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { cn } from '../../lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatDrawerProps {
   onClose: () => void;
@@ -34,6 +35,7 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
   const [mensagem, setMensagem] = useState('');
   const [novoGrupoNome, setNovoGrupoNome] = useState('');
   const [participantesSelecionados, setParticipantesSelecionados] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Rolar para o final quando novas mensagens chegarem
@@ -112,15 +114,225 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
     }
   };
 
+  const filteredChats = chats.filter(chat => {
+    const searchLower = searchTerm.toLowerCase();
+    if (chat.tipo === 'privado') {
+      const participante = chat.participantes.find(p => p.id !== chat.participantes[0].id);
+      return participante?.nome.toLowerCase().includes(searchLower);
+    }
+    return chat.nome?.toLowerCase().includes(searchLower);
+  });
+
+  const renderWelcomeScreen = () => (
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      className="flex flex-col items-center justify-center h-full p-8 text-center space-y-6"
+    >
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.2 }}
+        className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center"
+      >
+        <MessageSquare className="h-8 w-8 text-primary" />
+      </motion.div>
+      
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold tracking-tight">Bem-vindo ao Chat</h2>
+        <p className="text-muted-foreground">
+          Comunique-se com sua equipe, gerencie eventos e mantenha todos atualizados
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-2xl">
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
+                <MessageCircle className="h-6 w-6" />
+                <span>Novo Chat</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Novo Chat</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4">
+                {pessoas.map(pessoa => (
+                  <Button
+                    key={pessoa.id}
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => criarChatPrivado(String(pessoa.id))}
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    {pessoa.nome}
+                  </Button>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </motion.div>
+
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
+                <Users className="h-6 w-6" />
+                <span>Novo Grupo</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Novo Grupo</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4">
+                <Input
+                  placeholder="Nome do grupo"
+                  value={novoGrupoNome}
+                  onChange={e => setNovoGrupoNome(e.target.value)}
+                />
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Participantes</p>
+                  {pessoas.map(pessoa => (
+                    <div key={pessoa.id} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id={`pessoa-${pessoa.id}`}
+                        checked={participantesSelecionados.includes(String(pessoa.id))}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setParticipantesSelecionados([...participantesSelecionados, String(pessoa.id)]);
+                          } else {
+                            setParticipantesSelecionados(participantesSelecionados.filter(id => id !== String(pessoa.id)));
+                          }
+                        }}
+                      />
+                      <label htmlFor={`pessoa-${pessoa.id}`}>{pessoa.nome}</label>
+                    </div>
+                  ))}
+                </div>
+                <Button onClick={handleCriarGrupo} disabled={!novoGrupoNome || participantesSelecionados.length === 0}>
+                  Criar Grupo
+      </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </motion.div>
+
+        <motion.div
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2">
+                <Calendar className="h-6 w-6" />
+                <span>Chat de Evento</span>
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Chat de Evento</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4">
+                {eventos.map(evento => (
+            <Button
+                    key={evento.id}
+              variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => criarChatEvento(String(evento.id))}
+            >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    {evento.nome}
+            </Button>
+                ))}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </motion.div>
+      </div>
+
+      {chats.length > 0 && (
+        <div className="w-full max-w-2xl">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar conversas..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <AnimatePresence>
+            <motion.div className="space-y-2 mt-4">
+              {filteredChats.map((chat, index) => (
+                <motion.div
+                  key={chat.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card
+                    className="p-3 cursor-pointer hover:bg-accent transition-colors"
+                    onClick={() => selecionarChat(chat.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {chat.tipo === 'privado' && <MessageCircle className="h-4 w-4" />}
+                        {chat.tipo === 'grupo' && <Users className="h-4 w-4" />}
+                        {chat.tipo === 'evento' && <Calendar className="h-4 w-4" />}
+                        {chat.whatsappGroupId && (
+                          <Phone className="h-4 w-4 text-green-500" />
+                        )}
+                      <div>
+                        <p className="font-medium">
+                          {chat.tipo === 'privado'
+                            ? chat.participantes.find(p => p.id !== chat.participantes[0].id)?.nome
+                            : chat.nome || 'Chat em grupo'}
+                        </p>
+                        {chat.mensagens.length > 0 && (
+                          <p className="text-sm text-muted-foreground truncate">
+                            {chat.mensagens[chat.mensagens.length - 1].conteudo}
+                          </p>
+                        )}
+                        </div>
+                      </div>
+                      {chat.mensagens.filter(m => !m.lida).length > 0 && (
+                        <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
+                          {chat.mensagens.filter(m => !m.lida).length}
+                        </span>
+                      )}
+                    </div>
+                  </Card>
+                </motion.div>
+                ))}
+            </motion.div>
+          </AnimatePresence>
+              </div>
+      )}
+    </motion.div>
+  );
+
   const renderMensagem = (mensagem: Mensagem) => {
     const isRemetente = mensagem.remetente.id === chatAtual?.participantes[0].id;
 
     return (
-      <div
-        key={mensagem.id}
+      <motion.div
+                    key={mensagem.id}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         className={`flex ${isRemetente ? 'justify-end' : 'justify-start'} mb-4`}
-      >
-        <div
+                  >
+                    <div
           className={cn(
             "max-w-[80%] rounded-2xl p-3",
             isRemetente
@@ -131,7 +343,7 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
         >
           <div className="flex items-center justify-between gap-2 mb-1">
             <p className="text-sm font-medium">
-              {mensagem.remetente.nome}
+                        {mensagem.remetente.nome}
             </p>
             {mensagem.tipo === 'whatsapp' && (
               <TooltipProvider>
@@ -152,151 +364,56 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
             )}
           </div>
           <p className="text-sm break-words">{mensagem.conteudo}</p>
-          <p className="text-xs opacity-70 mt-1">
-            {formatDistanceToNow(mensagem.data, {
-              addSuffix: true,
-              locale: ptBR
-            })}
-          </p>
-        </div>
-      </div>
+                      <p className="text-xs opacity-70 mt-1">
+                        {formatDistanceToNow(mensagem.data, {
+                          addSuffix: true,
+                          locale: ptBR
+                        })}
+                      </p>
+                    </div>
+      </motion.div>
     );
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full md:w-96 bg-background border-l shadow-xl flex flex-col z-50">
-      {/* Cabeçalho */}
-      <div className="p-4 border-b flex flex-col">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            {chatAtual ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => selecionarChat('')}
-                className="hover:bg-accent"
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            ) : (
-              <MessageSquare className="h-5 w-5" />
-            )}
-            <h3 className="font-semibold">{getChatTitle()}</h3>
-            {config.enabled && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger>
-                    <Phone className="h-4 w-4 text-green-500" />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>WhatsApp conectado</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {!chatAtual && (
-              <>
-                {/* Novo Chat Privado */}
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MessageCircle className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Novo Chat</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4">
-                      {pessoas.map(pessoa => (
-                        <Button
-                          key={pessoa.id}
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={() => criarChatPrivado(String(pessoa.id))}
-                        >
-                          <Users className="h-4 w-4 mr-2" />
-                          {pessoa.nome}
-                        </Button>
-                      ))}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-
-                {/* Novo Grupo */}
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <Users className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Novo Grupo</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4">
-                      <Input
-                        placeholder="Nome do grupo"
-                        value={novoGrupoNome}
-                        onChange={e => setNovoGrupoNome(e.target.value)}
-                      />
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Participantes</p>
-                        {pessoas.map(pessoa => (
-                          <div key={pessoa.id} className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              id={`pessoa-${pessoa.id}`}
-                              checked={participantesSelecionados.includes(String(pessoa.id))}
-                              onChange={e => {
-                                if (e.target.checked) {
-                                  setParticipantesSelecionados([...participantesSelecionados, String(pessoa.id)]);
-                                } else {
-                                  setParticipantesSelecionados(participantesSelecionados.filter(id => id !== String(pessoa.id)));
-                                }
-                              }}
-                            />
-                            <label htmlFor={`pessoa-${pessoa.id}`}>{pessoa.nome}</label>
-                          </div>
-                        ))}
-                      </div>
-                      <Button onClick={handleCriarGrupo} disabled={!novoGrupoNome || participantesSelecionados.length === 0}>
-                        Criar Grupo
-                      </Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-
-                {/* Chat de Evento */}
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <Calendar className="h-4 w-4" />
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Chat de Evento</DialogTitle>
-                    </DialogHeader>
-                    <div className="grid gap-4">
-                      {eventos.map(evento => (
-                        <Button
-                          key={evento.id}
-                          variant="ghost"
-                          className="w-full justify-start"
-                          onClick={() => criarChatEvento(String(evento.id))}
-                        >
-                          <Calendar className="h-4 w-4 mr-2" />
-                          {evento.nome}
-                        </Button>
-                      ))}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </>
-            )}
+    <AnimatePresence>
+      <motion.div
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", damping: 20 }}
+        className="fixed inset-y-0 right-0 w-full md:w-96 bg-background border-l shadow-xl flex flex-col z-50"
+      >
+        {/* Cabeçalho */}
+        <div className="p-4 border-b flex flex-col">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              {chatAtual ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => selecionarChat('')}
+                  className="hover:bg-accent"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+              ) : (
+                <MessageSquare className="h-5 w-5" />
+              )}
+              <h3 className="font-semibold">{getChatTitle()}</h3>
+              {config.enabled && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Phone className="h-4 w-4 text-green-500" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>WhatsApp conectado</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -305,100 +422,66 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
               <X className="h-4 w-4" />
             </Button>
           </div>
-        </div>
-        {chatAtual && (
-          <p className="text-sm text-muted-foreground">{getChatInfo()}</p>
-        )}
-      </div>
-
-      {/* Lista de chats ou mensagens */}
-      <ScrollArea className="flex-1" ref={scrollRef}>
-        <div className="p-4">
-          {!chatAtual ? (
-            // Lista de chats
-            <div className="space-y-2">
-              {chats.map(chat => (
-                <Card
-                  key={chat.id}
-                  className="p-3 cursor-pointer hover:bg-accent transition-colors"
-                  onClick={() => selecionarChat(chat.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {chat.tipo === 'privado' && <MessageCircle className="h-4 w-4" />}
-                      {chat.tipo === 'grupo' && <Users className="h-4 w-4" />}
-                      {chat.tipo === 'evento' && <Calendar className="h-4 w-4" />}
-                      {chat.whatsappGroupId && (
-                        <Phone className="h-4 w-4 text-green-500" />
-                      )}
-                      <div>
-                        <p className="font-medium">
-                          {chat.tipo === 'privado'
-                            ? chat.participantes.find(p => p.id !== chat.participantes[0].id)?.nome
-                            : chat.nome || 'Chat em grupo'}
-                        </p>
-                        {chat.mensagens.length > 0 && (
-                          <p className="text-sm text-muted-foreground truncate">
-                            {chat.mensagens[chat.mensagens.length - 1].conteudo}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    {chat.mensagens.filter(m => !m.lida).length > 0 && (
-                      <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center">
-                        {chat.mensagens.filter(m => !m.lida).length}
-                      </span>
-                    )}
-                  </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            // Mensagens do chat atual
-            <div className="space-y-4">
-              {chatAtual.mensagens.map(renderMensagem)}
-            </div>
+          {chatAtual && (
+            <p className="text-sm text-muted-foreground">{getChatInfo()}</p>
           )}
-        </div>
-      </ScrollArea>
+                  </div>
 
-      {/* Campo de entrada */}
-      {chatAtual && (
-        <div className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="flex items-center space-x-2">
-            <Input
-              value={mensagem}
-              onChange={e => setMensagem(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Digite sua mensagem..."
-              className="flex-1 rounded-full bg-muted"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-accent rounded-full"
-              onClick={() => {/* TODO: Implementar upload de imagem */}}
-            >
-              <Image className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="hover:bg-accent rounded-full"
-              onClick={() => {/* TODO: Implementar upload de arquivo */}}
-            >
-              <Paperclip className="h-4 w-4" />
-            </Button>
-            <Button
-              onClick={handleEnviarMensagem}
-              disabled={!mensagem.trim()}
-              className="rounded-full"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+        {/* Conteúdo */}
+        <ScrollArea className="flex-1" ref={scrollRef}>
+          <div className="p-4">
+            {!chatAtual ? (
+              renderWelcomeScreen()
+            ) : (
+              <div className="space-y-4">
+                {chatAtual.mensagens.map(renderMensagem)}
+              </div>
+            )}
           </div>
-        </div>
-      )}
-    </div>
+        </ScrollArea>
+
+          {/* Campo de entrada */}
+          {chatAtual && (
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+          >
+              <div className="flex items-center space-x-2">
+                <Input
+                  value={mensagem}
+                  onChange={e => setMensagem(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Digite sua mensagem..."
+                className="flex-1 rounded-full bg-muted"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                className="hover:bg-accent rounded-full"
+                  onClick={() => {/* TODO: Implementar upload de imagem */}}
+                >
+                  <Image className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                className="hover:bg-accent rounded-full"
+                  onClick={() => {/* TODO: Implementar upload de arquivo */}}
+                >
+                  <Paperclip className="h-4 w-4" />
+                </Button>
+                <Button
+                  onClick={handleEnviarMensagem}
+                  disabled={!mensagem.trim()}
+                className="rounded-full"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+          </motion.div>
+          )}
+      </motion.div>
+    </AnimatePresence>
   );
 } 

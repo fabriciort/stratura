@@ -114,15 +114,15 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
   };
 
   const toggleDia = (dia: DiaSemana) => {
-    setFormData(prev => ({
-      ...prev,
-      disponibilidade: {
-        ...prev.disponibilidade,
+      setFormData(prev => ({
+        ...prev,
+        disponibilidade: {
+          ...prev.disponibilidade,
         dias: prev.disponibilidade.dias.includes(dia)
           ? prev.disponibilidade.dias.filter(d => d !== dia)
           : [...prev.disponibilidade.dias, dia]
-      }
-    }));
+        }
+      }));
   };
 
   const togglePeriodo = (periodo: Periodo) => {
@@ -153,37 +153,37 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
           <div className="grid gap-6">
             {/* Informações Básicas */}
             <Card>
-              <CardHeader>
+      <CardHeader>
                 <CardTitle className="text-base">Informações Básicas</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+      </CardHeader>
+        <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
+            <div className="space-y-2">
                     <Label>Nome</Label>
-                    <Input
-                      value={formData.nome}
+                <Input
+                  value={formData.nome}
                       onChange={(e) => setFormData(prev => ({ ...prev, nome: e.target.value }))}
                       placeholder="Nome completo"
-                    />
-                  </div>
-                  <div className="space-y-2">
+                />
+            </div>
+            <div className="space-y-2">
                     <Label>Email</Label>
-                    <Input
-                      type="email"
-                      value={formData.email}
+                <Input
+                  type="email"
+                  value={formData.email}
                       onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                       placeholder="email@exemplo.com"
-                    />
-                  </div>
-                  <div className="space-y-2">
+                />
+              </div>
+            <div className="space-y-2">
                     <Label>Telefone</Label>
-                    <Input
-                      value={formData.telefone}
+                <Input
+                  value={formData.telefone}
                       onChange={(e) => setFormData(prev => ({ ...prev, telefone: e.target.value }))}
                       placeholder="(00) 00000-0000"
-                    />
-                  </div>
-                </div>
+                />
+              </div>
+            </div>
               </CardContent>
             </Card>
 
@@ -194,10 +194,10 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
+            <div className="space-y-2">
                     <Label>Função Principal</Label>
                     <Select 
-                      value={formData.funcaoPrincipal}
+                  value={formData.funcaoPrincipal}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, funcaoPrincipal: value }))}
                     >
                       <SelectTrigger>
@@ -211,11 +211,11 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                  <div className="space-y-2">
+          </div>
+          <div className="space-y-2">
                     <Label>Função Secundária (opcional)</Label>
                     <Select 
-                      value={formData.funcaoSecundaria}
+                value={formData.funcaoSecundaria}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, funcaoSecundaria: value }))}
                     >
                       <SelectTrigger>
@@ -229,8 +229,8 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
                         ))}
                       </SelectContent>
                     </Select>
-                  </div>
-                </div>
+            </div>
+          </div>
               </CardContent>
             </Card>
 
@@ -240,7 +240,7 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
                 <CardTitle className="text-base">Disponibilidade</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-4">
+            <div className="space-y-4">
                   <Label>Dias Disponíveis</Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {DIAS_SEMANA.map((dia) => (
@@ -254,9 +254,9 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
                         <Calendar className="h-4 w-4 mr-2" />
                         {dia}
                       </Button>
-                    ))}
-                  </div>
+                  ))}
                 </div>
+              </div>
                 <div className="space-y-4">
                   <Label>Períodos Disponíveis</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -271,9 +271,9 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
                         <Clock className="h-4 w-4 mr-2" />
                         {periodo}
                       </Button>
-                    ))}
-                  </div>
+                  ))}
                 </div>
+              </div>
               </CardContent>
             </Card>
 
@@ -283,8 +283,8 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
                 <CardTitle className="text-base">Observações</CardTitle>
               </CardHeader>
               <CardContent>
-                <textarea
-                  value={formData.observacoes}
+            <textarea
+              value={formData.observacoes}
                   onChange={(e) => setFormData(prev => ({ ...prev, observacoes: e.target.value }))}
                   placeholder="Adicione observações sobre a pessoa..."
                   className={cn(
@@ -298,12 +298,12 @@ export function PessoaForm({ pessoa, onClose }: PessoaFormProps) {
       </ScrollArea>
 
       <div className="flex justify-end space-x-4 pt-4 border-t mt-4">
-        <Button type="button" variant="outline" onClick={onClose}>
-          Cancelar
-        </Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancelar
+          </Button>
         <Button onClick={handleSubmit}>
           {pessoa ? 'Atualizar' : 'Criar'}
-        </Button>
+          </Button>
       </div>
     </div>
   );
