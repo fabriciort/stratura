@@ -10,6 +10,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Usuário de teste para desenvolvimento
+const TEST_USER: User = {
+  id: 'user1', // Mesmo ID usado nos chats de exemplo
+  name: 'Você',
+  email: 'teste@exemplo.com',
+  role: 'admin'
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,20 +27,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+    } else {
+      // Em desenvolvimento, usar o usuário de teste
+      localStorage.setItem('user', JSON.stringify(TEST_USER));
+      setUser(TEST_USER);
     }
     setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      // Simulação de login - substituir por chamada real à API
-      const mockUser: User = {
-        id: '1',
-        name: 'Usuário Teste',
-        email,
-        role: 'admin'
-      };
-
+      // Em produção, isso seria substituído pela chamada real à API
+      const mockUser = TEST_USER;
       localStorage.setItem('user', JSON.stringify(mockUser));
       setUser(mockUser);
     } catch (error) {

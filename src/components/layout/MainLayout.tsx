@@ -8,6 +8,7 @@ import { Menu, X, Calendar, Users, ClipboardList, BarChart2, Settings, MessageCi
 import { cn } from '../../lib/utils';
 import { ThemeToggle } from '../ui/theme-toggle';
 import { ChatDrawer } from '../chat/ChatDrawer';
+import { useChat } from '../../contexts/ChatContext';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -30,6 +31,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { user, logout } = useAuth();
+  const { mensagensNaoLidas } = useChat();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -163,6 +165,22 @@ export function MainLayout({ children }: MainLayoutProps) {
       <main className="container py-6">
         {children}
       </main>
+
+      {/* Botão flutuante do chat */}
+      <Button
+        variant="default"
+        size="lg"
+        className="fixed bottom-6 right-6 rounded-full p-4 shadow-lg z-50 flex items-center gap-2"
+        onClick={() => setChatOpen(true)}
+      >
+        <MessageCircle className="h-6 w-6" />
+        <span className="hidden md:inline">Chat</span>
+        {mensagensNaoLidas > 0 && (
+          <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-destructive text-xs font-medium text-destructive-foreground flex items-center justify-center">
+            {mensagensNaoLidas}
+          </span>
+        )}
+      </Button>
 
       {/* Chat Drawer */}
       {chatOpen && <ChatDrawer onClose={() => setChatOpen(false)} />}

@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useChat } from '../../contexts/ChatContext';
 import { useWhatsapp } from '../../contexts/WhatsappContext';
+import { useApp } from '../../contexts/AppContext';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { Input } from '../ui/input';
-import { MessageSquare, X, Send, Image, Paperclip, Phone, MessageCircle } from 'lucide-react';
+import { MessageSquare, X, Send, Image, Paperclip, Phone, MessageCircle, Plus, Users, Calendar } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Mensagem } from '../../types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { ScrollArea } from '../ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 
 interface ChatDrawerProps {
   onClose: () => void;
@@ -21,10 +23,16 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
     chatAtual,
     mensagensNaoLidas,
     selecionarChat,
-    enviarMensagem
+    enviarMensagem,
+    criarChatPrivado,
+    criarChatGrupo,
+    criarChatEvento
   } = useChat();
   const { config, enviarMensagemWhatsapp } = useWhatsapp();
+  const { pessoas, eventos } = useApp();
   const [mensagem, setMensagem] = useState('');
+  const [novoGrupoNome, setNovoGrupoNome] = useState('');
+  const [participantesSelecionados, setParticipantesSelecionados] = useState<string[]>([]);
 
   const handleEnviarMensagem = async () => {
     if (!mensagem.trim()) return;
@@ -51,6 +59,14 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleEnviarMensagem();
+    }
+  };
+
+  const handleCriarGrupo = () => {
+    if (novoGrupoNome && participantesSelecionados.length > 0) {
+      criarChatGrupo(novoGrupoNome, participantesSelecionados);
+      setNovoGrupoNome('');
+      setParticipantesSelecionados([]);
     }
   };
 
@@ -123,13 +139,116 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
             </TooltipProvider>
           )}
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-        >
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          {!chatAtual && (
+            <>
+              {/* Novo Chat Privado */}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MessageCircle className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Novo Chat</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4">
+                    {pessoas.map(pessoa => (
+                      <Button
+                        key={pessoa.id}
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => criarChatPrivado(String(pessoa.id))}
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        {pessoa.nome}
+                      </Button>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Novo Grupo */}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Users className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Novo Grupo</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4">
+                    <Input
+                      placeholder="Nome do grupo"
+                      value={novoGrupoNome}
+                      onChange={e => setNovoGrupoNome(e.target.value)}
+                    />
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Participantes</p>
+                      {pessoas.map(pessoa => (
+                        <div key={pessoa.id} className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id={`pessoa-${pessoa.id}`}
+                            checked={participantesSelecionados.includes(String(pessoa.id))}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setParticipantesSelecionados([...participantesSelecionados, String(pessoa.id)]);
+                              } else {
+                                setParticipantesSelecionados(participantesSelecionados.filter(id => id !== String(pessoa.id)));
+                              }
+                            }}
+                          />
+                          <label htmlFor={`pessoa-${pessoa.id}`}>{pessoa.nome}</label>
+                        </div>
+                      ))}
+                    </div>
+                    <Button onClick={handleCriarGrupo} disabled={!novoGrupoNome || participantesSelecionados.length === 0}>
+                      Criar Grupo
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+
+              {/* Chat de Evento */}
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Calendar className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Chat de Evento</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4">
+                    {eventos.map(evento => (
+                      <Button
+                        key={evento.id}
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => criarChatEvento(String(evento.id))}
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        {evento.nome}
+                      </Button>
+                    ))}
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </>
+          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClose}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Lista de chats ou mensagens */}
@@ -146,6 +265,9 @@ export function ChatDrawer({ onClose }: ChatDrawerProps) {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
+                      {chat.tipo === 'privado' && <MessageCircle className="h-4 w-4" />}
+                      {chat.tipo === 'grupo' && <Users className="h-4 w-4" />}
+                      {chat.tipo === 'evento' && <Calendar className="h-4 w-4" />}
                       {chat.whatsappGroupId && (
                         <Phone className="h-4 w-4 text-green-500" />
                       )}
